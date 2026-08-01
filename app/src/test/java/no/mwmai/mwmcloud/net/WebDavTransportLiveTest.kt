@@ -50,8 +50,7 @@ class WebDavTransportLiveTest {
 
     @Test
     fun `wrong password is an AUTH failure, not a network one`() = runBlocking {
-        val t = transport()
-        assumeTrue(t is WebDavTransport)
+        transport() // establishes the skip condition before anything else runs
         val bad = WebDavTransport(host!!, user!!, pass!! + "-wrong")
 
         val e = runCatching { bad.testConnection() }.exceptionOrNull()
@@ -103,9 +102,14 @@ class WebDavTransportLiveTest {
 
     @Test
     fun `listing a missing collection is NOT_FOUND`() = runBlocking {
-        val e = runCatching {
-            transport().list("$scratch/missing-${Random.nextLong()}")
-        }.exceptionOrNull()
+        // transport() must be called OUTSIDE runCatching. Inside, its skip signal
+        // is captured as a Result failure and then cast to TransportException,
+        // which turns a clean skip into a ClassCastException on any machine
+        // without credentials.
+        val t = transport()
+
+        val e = runCatching { t.list("$scratch/missing-${Random.nextLong()}") }.exceptionOrNull()
+        assertTrue("expected TransportException, got $e", e is TransportException)
         assertEquals(FailureKind.NOT_FOUND, (e as TransportException).kind)
     }
 
