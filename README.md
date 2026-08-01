@@ -8,8 +8,9 @@ is roughly EUR 3.20/month for 1 TB with unlimited traffic and speaks open protoc
 (SFTP, WebDAV) instead of a proprietary client. Nothing in the app is tied to that
 vendor beyond one `Transport` implementation.
 
-**Status: early. Not yet usable.** The current build opens on a design-reference
-screen, not the app. See [Roadmap](#roadmap).
+**Status: early but usable.** You can connect it to a storage box and back up
+photos, music and video today. Documents and household invite codes are not built
+yet. See [Roadmap](#roadmap).
 
 ## Download
 
@@ -130,11 +131,18 @@ original and the English are the translation, not the other way round.
 ## Roadmap
 
 - [x] Project scaffold, design tokens, CI
-- [ ] WebDAV transport and encrypted credential store
-- [ ] Media enumeration, upload ledger, background upload
-- [ ] Reconcile against the server, core screens, first release
+- [x] WebDAV transport and encrypted credential store
+- [x] Media enumeration, upload ledger, background upload
+- [x] Welcome, connection setup, folder picker, home screen
+- [ ] Documents, via a folder picker (MediaStore has no document category)
+- [ ] Reconcile against the server, so the counts are checked and not just asserted
+- [ ] Resumable uploads over SFTP, which is what would lift the 5 GB per-file limit
 - [ ] Provisioning service and invite codes for households
 - [ ] In-app file browser
+
+Current limits worth knowing: single files above 5 GB are skipped and reported,
+because WebDAV `PUT` cannot resume a broken upload. Categories are all-or-nothing;
+there is no per-file picker.
 
 ## Licence
 
