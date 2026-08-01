@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,7 +11,7 @@ plugins {
 //   mwmcloud.backendUrl=https://your-host.example.com
 // in local.properties (untracked) to point a build at a real deployment.
 val backendUrl: String = run {
-    val props = java.util.Properties()
+    val props = Properties()
     val f = rootProject.file("local.properties")
     if (f.exists()) f.inputStream().use { props.load(it) }
     props.getProperty("mwmcloud.backendUrl") ?: "https://cloud.example.com"
