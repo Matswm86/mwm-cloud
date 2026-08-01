@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Redrawn from design/grafikk/ui-ikoner.png on the 24 dp grid the pack specifies:
+  1.8 stroke, round caps, round joins. Tinted at use site; the fill colour here is
+  only the preview default.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+    <path
+        android:pathData="M8.1,4.6 L9.9,4.6 L11.4,8.3 L9.5,9.8 A11.4,11.4 0 0,0 14.2,14.5 L15.7,12.6 L19.4,14.1 V15.9 A2.6,2.6 0 0,1 16.8,18.5 A14.5,14.5 0 0,1 5.5,7.2 A2.6,2.6 0 0,1 8.1,4.6 Z"
+        android:strokeColor="#14212B"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
