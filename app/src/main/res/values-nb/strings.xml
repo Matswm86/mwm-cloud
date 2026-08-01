@@ -173,4 +173,6 @@
     <string name="schedule_what_title">Hva skal sikres automatisk?</string>
     <string name="schedule_nothing_chosen">Ingenting er valgt, så den automatiske sikringen gjør ingenting.</string>
     <string name="schedule_wifi_note">Automatisk sikring går bare på trådløst nett, og bare når batteriet ikke er lavt. Mobildata blir aldri brukt.</string>
+
+    <string name="folders_skip">Ikke nå, bare vis meg filene</string>
 </resources>

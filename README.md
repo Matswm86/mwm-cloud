@@ -1,17 +1,19 @@
 # MWM Cloud
 
-An Android app that quietly backs up a phone's photos, music, video and documents
-to a storage box you own, and then tells you honestly whether it worked.
+An Android app that backs up a phone's photos, music, video and documents to
+storage you own, lets you watch and read them again from inside the app, and then
+tells you honestly whether any of it actually worked.
 
-It targets [Hetzner Storage Box](https://www.hetzner.com/storage/storage-box/), which
-is roughly EUR 3.20/month for 1 TB with unlimited traffic and speaks open protocols
-(SFTP, WebDAV) instead of a proprietary client. Nothing in the app is tied to that
-vendor beyond one `Transport` implementation.
+It is built against [Hetzner Storage Box](https://www.hetzner.com/storage/storage-box/),
+roughly EUR 3.20/month for 1 TB with unlimited traffic, which speaks WebDAV and
+SFTP rather than a proprietary client. Nothing above one `Transport` implementation
+knows that, so any WebDAV host works today by typing its address.
 
-**Status: early but usable.** You can connect it to a storage box, back up photos,
-music and video, and then browse, view and play them back inside the app without
-ever seeing a URL. Household invite codes are not built yet. See
-[Roadmap](#roadmap).
+**Status: in daily use, and honest about what it is.** Running against a real box
+with about 6 700 files and 50 GB on it. You can connect it, choose exactly what
+goes and what stays, have it run weekly on its own, then browse the result as a
+photo grid, play a film, and ask the server to confirm file by file that your
+copies are really there. Household invite codes are not built. See [Roadmap](#roadmap).
 
 ## Download
 
@@ -32,7 +34,12 @@ for people who enjoy configuring sync clients. This one is built for the person 
 just wants their photos to still exist in ten years, and who has been paying a
 monthly subscription for storage they never chose and cannot audit.
 
-Two consequences shape every decision here:
+Buttons are 68 dp tall, nothing renders below 15 sp, and the interface is Norwegian
+first. Those are not preferences. The person this is for is often in their
+seventies, holding the phone at arm's length, and has been told for years that
+backup is something they are too old to understand.
+
+Five consequences shape every decision here:
 
 - **The app never deletes anything from your phone.** There is no delete-local code
   path, in any version. Freeing space is a manual decision you make after you have
@@ -51,27 +58,38 @@ Two consequences shape every decision here:
   tomorrow is covered without being asked about. A category set to *only what I
   pick* stores what you ticked on, and never adopts anything new. Guessing between
   those is how a backup either misses new photos or quietly grows to 40 GB.
+- **A failure that cannot be diagnosed is never reported as data loss.** When the
+  check cannot read the server's answer it says the check failed. It does not say
+  your files are missing. That distinction cost a real scare to learn: a parser
+  fault made every listing unreadable, and the panel reported 444 files that were
+  sitting safely on the box as gone.
 
 ## How it works
 
 ```
-  Android app                         Provisioning service        Storage box
-  ------------------------            --------------------        -----------
-  MediaStore -> upload ledger
-                    |                  POST /invite/redeem
-               WorkManager  -------->  creates a scoped     ---->  /home/<user>
-               (unmetered,             sub-account
-                battery-aware)
-                    |
-               Transport  --- HTTPS PUT / MKCOL / PROPFIND ----->  files
+  On the phone                                          Your storage
+  ----------------------------------------              ------------
+  MediaStore  ─┐
+  System picker ┴─> Selection ──> upload ledger
+                    (all / only-picked, per category)
+                         │
+                    WorkManager        manual, or every day/week/month
+                    (wifi only, battery-aware, resumes across runs)
+                         │
+                    Transport ─── PUT / MKCOL / PROPFIND ───> /Bilder/2026/08/…
+                         │                                     /Musikk /Video /Valgt
+                    Verifier  ─── PROPFIND, compare sizes ───> what is really there
+                         │
+                    Viewer    ─── GET with ranges ──────────> photos, film, music
 ```
 
-Each person gets their own sub-account with its own home directory, so members of a
-household share one box without seeing each other's files. The phone holds only its
-own credentials; the provisioning service is the only thing that can create accounts.
+Media is filed by year and month so no remote folder grows into the thousands and a
+month is one request. Files you pick by hand keep the folder shape you chose, under
+`/Valgt`, because that is the shape you will look for when you want them back.
 
-You can also skip the service entirely and point the app straight at a storage box
-with a username and password.
+**Seeing your files never requires uploading anything.** The file screen reads the
+server directly, so a fresh install pointed at an existing box can browse and play
+everything on it without backing up a single byte first.
 
 ## Build
 
@@ -101,7 +119,28 @@ mwmcloud.backendUrl=https://your-host.example.com
 
 Builds without it default to `https://cloud.example.com`, which does not resolve.
 
-## Setting up a storage box
+## Which storage this works with
+
+Any host that speaks WebDAV works **today**: type its address, username and
+password on the connection screen and the app treats it like any other. That covers
+Nextcloud and ownCloud, Synology and QNAP boxes, Infomaniak kDrive, Koofr,
+Mailbox.org, Fastmail files, and self-hosted rclone or Apache `mod_dav`.
+
+What is **not** supported, and what each would actually take:
+
+| Kind | Examples | What is needed |
+|---|---|---|
+| WebDAV | the list above | nothing, it works now |
+| S3-compatible | Backblaze B2, Wasabi, Cloudflare R2, Storj, iDrive e2, Scaleway, MinIO | one new `Transport`, roughly the size of the WebDAV one. Multipart upload comes with it, which is also what lifts the 5 GB per-file limit |
+| SFTP | any box with SSH, including this one | one new `Transport`. Gives resumable transfers and a real free-space figure, which WebDAV cannot report |
+| Consumer clouds | Google Drive, Dropbox, OneDrive, iCloud | genuinely large, and mostly not code: each needs its own developer account, OAuth client, redirect scheme, and in Google's and Apple's case a review before the scopes work outside a test user list. One vendor at a time, not a list |
+
+So "pick your provider from a list" is two different jobs. A menu over WebDAV and
+S3 hosts that fills in the right address template is small and would cover a few
+dozen providers. Adding the four big consumer clouds is a per-vendor commitment
+with paperwork attached, and it changes who is responsible when a login breaks.
+
+## Setting up a Hetzner storage box
 
 1. Order a Storage Box. The 1 TB tier is enough for most phones.
 2. Enable, in the provider console:
@@ -113,8 +152,9 @@ Builds without it default to `https://cloud.example.com`, which does not resolve
    deletes something it should not have.
 
 Known limits worth planning around: a box allows up to 100 sub-accounts and 10
-simultaneous connections per account. WebDAV cannot report free space, so quota
-readings come over SFTP or from the provisioning service.
+simultaneous connections per account, which is why members of a household can share
+one box without seeing each other's files. WebDAV cannot report free space at all,
+so a quota figure has to come over SFTP.
 
 ## Design
 
@@ -153,7 +193,10 @@ original and the English are the translation, not the other way round.
 - [x] Per-file picker with thumbnails, sort by date or size, search, select all
 - [x] Per-category choice between "everything" and "only what I pick"
 - [x] Scheduled automatic backup, with its own list of what it covers
+- [x] Browse and play what is on the server without backing anything up first
 - [ ] First-run walkthrough with a visible confirmation at each step
+- [ ] S3-compatible transport, which also brings multipart upload
+- [ ] A provider picker over the WebDAV and S3 hosts that need no OAuth
 - [ ] Resumable uploads over SFTP, which is what would lift the 5 GB per-file limit
 - [ ] Provisioning service and invite codes for households
 

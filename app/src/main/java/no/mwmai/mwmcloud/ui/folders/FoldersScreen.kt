@@ -50,6 +50,7 @@ import no.mwmai.mwmcloud.data.media.CategorySummary
 import no.mwmai.mwmcloud.data.media.MediaCategory
 import no.mwmai.mwmcloud.settings.BackupSchedule
 import no.mwmai.mwmcloud.ui.PrimaryButton
+import no.mwmai.mwmcloud.ui.SecondaryButton
 import no.mwmai.mwmcloud.ui.formatBytes
 import no.mwmai.mwmcloud.ui.formatCount
 import no.mwmai.mwmcloud.ui.theme.MwmColors
@@ -229,6 +230,21 @@ fun FoldersScreen(
                 scope.launch {
                     Graph.settings(context).setCategories(chosen)
                     UploadWorker.enqueue(context, chosen)
+                    onDone()
+                }
+            },
+        )
+        Spacer(Modifier.height(12.dp))
+
+        // Looking at what is already on the box is not a reason to send anything
+        // new. Without this, the only way off this screen on a first run was to
+        // start a backup, which meant someone who just wanted to see a photo had
+        // to upload their whole library first.
+        SecondaryButton(
+            text = stringResource(R.string.folders_skip),
+            onClick = {
+                scope.launch {
+                    Graph.settings(context).setCategories(chosen)
                     onDone()
                 }
             },

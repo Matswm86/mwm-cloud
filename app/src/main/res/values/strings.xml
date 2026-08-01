@@ -174,4 +174,6 @@
     <string name="schedule_what_title">What should be backed up automatically?</string>
     <string name="schedule_nothing_chosen">Nothing is chosen, so the automatic backup would do nothing.</string>
     <string name="schedule_wifi_note">Automatic backup runs on wifi only, and only when the battery is not low. Mobile data is never used.</string>
+
+    <string name="folders_skip">Not now, just show me the files</string>
 </resources>
