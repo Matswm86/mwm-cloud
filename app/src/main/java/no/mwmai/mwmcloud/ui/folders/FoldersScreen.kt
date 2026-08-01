@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,7 +57,11 @@ import no.mwmai.mwmcloud.work.UploadWorker
  * placeholders: an empty category shows as empty rather than pretending.
  */
 @Composable
-fun FoldersScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
+fun FoldersScreen(
+    onDone: () -> Unit,
+    onBrowse: (MediaCategory) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -167,6 +172,7 @@ fun FoldersScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
                 scanning = scanning,
                 checked = selected[category] == true,
                 onCheckedChange = { selected[category] = it },
+                onOpen = { onBrowse(category) },
             )
             Spacer(Modifier.height(MwmDimens.CardSpacing))
         }
@@ -278,6 +284,7 @@ private fun CategoryCard(
     scanning: Boolean,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    onOpen: () -> Unit,
 ) {
     Card(
         shape = RoundedCornerShape(MwmDimens.CardRadius),
@@ -306,7 +313,12 @@ private fun CategoryCard(
 
             Spacer(Modifier.size(16.dp))
 
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(
+                Modifier
+                    .weight(1f)
+                    .clickable(enabled = summary != null && summary.fileCount > 0, onClick = onOpen),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 Text(
                     stringResource(labelFor(category)),
                     style = MaterialTheme.typography.titleLarge,

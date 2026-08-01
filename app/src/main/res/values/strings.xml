@@ -73,4 +73,15 @@
     <string name="picked_add_files">Choose files</string>
     <string name="picked_clear">Remove all chosen</string>
     <string name="err_nothing_selected">Nothing is chosen yet.</string>
+    <string name="done">Done</string>
+    <string name="browse_included">%1$s of %2$s included · %3$s</string>
+    <string name="browse_too_large">Too large to back up yet (over %1$s)</string>
+    <string name="browse_open">See and choose individual files</string>
+    <string name="verify_title">Check everything is there</string>
+    <string name="verify_never">Not checked yet. Tap below and the app asks your storage directly.</string>
+    <string name="verify_checking">Asking your storage…</string>
+    <string name="verify_checking_progress">Checked %1$s of %2$s…</string>
+    <string name="verify_all_good">All %1$s files are on your storage, at the right size.</string>
+    <string name="verify_problems">%1$s of %2$s confirmed. %3$d missing, %4$d the wrong size.</string>
+    <string name="verify_button">Check now</string>
 </resources>

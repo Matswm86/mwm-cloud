@@ -56,6 +56,22 @@ class AppSettings(private val context: Context) {
         context.settingsDataStore.edit { it[KEY_FILES] = (it[KEY_FILES] ?: emptySet()) + uris }
     }
 
+    /**
+     * Individual files the user unticked.
+     *
+     * Exclusions are stored rather than inclusions, so a photo taken tomorrow is
+     * backed up automatically instead of silently missing because it was not on
+     * a list written today.
+     */
+    val excluded: Flow<Set<String>> =
+        context.settingsDataStore.data.map { it[KEY_EXCLUDED] ?: emptySet() }
+
+    suspend fun currentExcluded(): Set<String> = excluded.first()
+
+    suspend fun setExcluded(uris: Set<String>) {
+        context.settingsDataStore.edit { it[KEY_EXCLUDED] = uris }
+    }
+
     suspend fun clearPicked() {
         context.settingsDataStore.edit {
             it[KEY_FOLDERS] = emptySet()
@@ -72,6 +88,7 @@ class AppSettings(private val context: Context) {
         val KEY_SETUP = booleanPreferencesKey("setup_complete")
         val KEY_FOLDERS = stringSetPreferencesKey("picked_folders")
         val KEY_FILES = stringSetPreferencesKey("picked_files")
+        val KEY_EXCLUDED = stringSetPreferencesKey("excluded_uris")
 
         /** Everything on by default. Anything left out is something not backed up. */
         val DEFAULT_CATEGORIES = MediaCategory.entries.toSet()

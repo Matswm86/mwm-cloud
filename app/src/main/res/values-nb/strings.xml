@@ -73,4 +73,15 @@
     <string name="picked_add_files">Velg filer</string>
     <string name="picked_clear">Fjern alle valgte</string>
     <string name="err_nothing_selected">Ingenting er valgt ennå.</string>
+    <string name="done">Ferdig</string>
+    <string name="browse_included">%1$s av %2$s tas med · %3$s</string>
+    <string name="browse_too_large">For stor til å sikres nå (over %1$s)</string>
+    <string name="browse_open">Se og velg enkeltfiler</string>
+    <string name="verify_title">Sjekk at alt er der</string>
+    <string name="verify_never">Ikke sjekket ennå. Trykk under, så spør appen lagringsplassen direkte.</string>
+    <string name="verify_checking">Spør lagringsplassen …</string>
+    <string name="verify_checking_progress">Sjekket %1$s av %2$s …</string>
+    <string name="verify_all_good">Alle %1$s filene ligger på lagringsplassen, i riktig størrelse.</string>
+    <string name="verify_problems">%1$s av %2$s bekreftet. %3$d mangler, %4$d har feil størrelse.</string>
+    <string name="verify_button">Sjekk nå</string>
 </resources>

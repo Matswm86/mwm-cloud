@@ -10,6 +10,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.first
 import no.mwmai.mwmcloud.Graph
+import no.mwmai.mwmcloud.data.media.MediaCategory
+import no.mwmai.mwmcloud.ui.browse.BrowseScreen
 import no.mwmai.mwmcloud.ui.folders.FoldersScreen
 import no.mwmai.mwmcloud.ui.home.HomeScreen
 import no.mwmai.mwmcloud.ui.setup.SetupScreen
@@ -20,6 +22,7 @@ private object Routes {
     const val SETUP = "setup"
     const val FOLDERS = "folders"
     const val HOME = "home"
+    const val BROWSE = "browse"
 }
 
 @Composable
@@ -53,7 +56,14 @@ fun AppNav(modifier: Modifier = Modifier) {
                 onDone = {
                     nav.navigate(Routes.HOME) { popUpTo(Routes.FOLDERS) { inclusive = true } }
                 },
+                onBrowse = { category -> nav.navigate("${Routes.BROWSE}/${category.name}") },
             )
+        }
+        composable("${Routes.BROWSE}/{category}") { entry ->
+            val category = runCatching {
+                MediaCategory.valueOf(entry.arguments?.getString("category").orEmpty())
+            }.getOrNull() ?: MediaCategory.IMAGES
+            BrowseScreen(category = category, onBack = { nav.popBackStack() })
         }
         composable(Routes.HOME) {
             HomeScreen(onChangeFolders = { nav.navigate(Routes.FOLDERS) })

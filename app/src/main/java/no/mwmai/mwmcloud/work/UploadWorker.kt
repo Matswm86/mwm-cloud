@@ -79,10 +79,14 @@ class UploadWorker(
             return Result.failure(error(applicationContext.getString(R.string.err_nothing_selected)))
         }
 
+        // Files the user unticked in the per-category browser.
+        val excluded = settings.currentExcluded()
+
         // Distinct by remote path: a file can be reached both by category and by
         // a picked folder, and uploading it twice would double the reported work.
         val pending = found
             .distinctBy { it.remotePath }
+            .filter { it.uri.toString() !in excluded }
             .filter { it.dedupeKey !in alreadyDone }
 
         if (pending.isEmpty()) return Result.success(progress(0, 0))

@@ -73,7 +73,10 @@ fun HomeScreen(onChangeFolders: () -> Unit, modifier: Modifier = Modifier) {
     var backedUp by remember { mutableIntStateOf(0) }
     var refreshKey by remember { mutableIntStateOf(0) }
 
-    androidx.compose.runtime.LaunchedEffect(info?.state, refreshKey) {
+    // Keyed on `done` as well as state. Keyed only on state, the count froze at
+    // whatever it was when the run started, because RUNNING does not change while
+    // files are going up. That made a live backup look stuck at zero.
+    androidx.compose.runtime.LaunchedEffect(info?.state, done, refreshKey) {
         backedUp = Graph.ledger(context).count()
     }
 
@@ -146,6 +149,12 @@ fun HomeScreen(onChangeFolders: () -> Unit, modifier: Modifier = Modifier) {
             }
         }
 
+        Spacer(Modifier.height(MwmDimens.CardSpacing))
+
+        // The trust surface: ask the server what is genuinely there, rather than
+        // trusting the app's own record of what it thinks it sent.
+        VerifyPanel(running = running)
+
         Spacer(Modifier.weight(1f))
 
         if (!running) {
@@ -172,6 +181,124 @@ fun HomeScreen(onChangeFolders: () -> Unit, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+/**
+ * Runs a real listing of the storage box and compares it against what the phone
+ * holds. This is the only screen element that can honestly say "safe", because
+ * it is the only one that asked the server.
+ */
+@Composable
+private fun VerifyPanel(running: Boolean) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    var busy by remember { mutableStateOf(false) }
+    var checked by remember { mutableIntStateOf(0) }
+    var expected by remember { mutableIntStateOf(0) }
+    var result by remember { mutableStateOf<no.mwmai.mwmcloud.data.verify.VerifyResult?>(null) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    Card(
+        shape = RoundedCornerShape(MwmDimens.CardRadius),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                stringResource(R.string.verify_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = MwmColors.Text,
+            )
+
+            val body = when {
+                busy && expected > 0 -> stringResource(
+                    R.string.verify_checking_progress,
+                    formatCount(checked),
+                    formatCount(expected),
+                )
+                busy -> stringResource(R.string.verify_checking)
+                error != null -> error!!
+                result == null -> stringResource(R.string.verify_never)
+                result!!.allGood -> stringResource(
+                    R.string.verify_all_good,
+                    formatCount(result!!.confirmed),
+                )
+                else -> stringResource(
+                    R.string.verify_problems,
+                    formatCount(result!!.confirmed),
+                    formatCount(result!!.total),
+                    result!!.missing.size,
+                    result!!.wrongSize.size,
+                )
+            }
+
+            Text(
+                text = body,
+                style = MaterialTheme.typography.bodyMedium,
+                color = when {
+                    error != null -> MwmColors.Attention
+                    result?.allGood == true -> MwmColors.Safe
+                    result != null -> MwmColors.Attention
+                    else -> MwmColors.Muted
+                },
+            )
+
+            // Name the first few that are wrong. A count alone tells the user
+            // there is a problem but not which photo to worry about.
+            result?.let { r ->
+                (r.missing + r.wrongSize).take(3).forEach { path ->
+                    Text(
+                        "· ${path.substringAfterLast('/')}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MwmColors.Muted,
+                    )
+                }
+            }
+
+            PrimaryButton(
+                text = stringResource(R.string.verify_button),
+                enabled = !running,
+                busy = busy,
+                color = MwmColors.Safe,
+                onClick = {
+                    busy = true; error = null; result = null; checked = 0; expected = 0
+                    scope.launch {
+                        try {
+                            val creds = Graph.credentialStore(context).current()
+                            if (creds == null) {
+                                error = context.getString(R.string.err_generic)
+                                return@launch
+                            }
+                            val settings = Graph.settings(context)
+                            val excluded = settings.currentExcluded()
+                            val files = buildList {
+                                settings.currentCategories().forEach {
+                                    addAll(Graph.mediaScanner(context).scan(it))
+                                }
+                                addAll(
+                                    Graph.safScanner(context).scan(
+                                        settings.currentPickedFolders(),
+                                        settings.currentPickedFiles(),
+                                    ),
+                                )
+                            }.distinctBy { it.remotePath }
+                                .filter { it.uri.toString() !in excluded }
+
+                            expected = files.size
+                            result = no.mwmai.mwmcloud.data.verify.Verifier(context)
+                                .verify(creds, files) { c, t -> checked = c; expected = t }
+                        } catch (e: Exception) {
+                            error = context.getString(R.string.err_generic)
+                        } finally {
+                            busy = false
+                        }
+                    }
+                },
+            )
+        }
     }
 }
 
