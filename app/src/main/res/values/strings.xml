@@ -141,4 +141,37 @@
     <string name="verify_repair">Send what is missing again</string>
     <string name="verify_repairing">Queueing \u2026</string>
     <string name="verify_repaired">%1$s files are queued again. Backing up starts when the phone is on wifi.</string>
+
+    <!-- Choosing individual files -->
+    <string name="browse_select_all">Select all</string>
+    <string name="browse_select_none">Clear all</string>
+    <string name="browse_search_hint">Search names</string>
+    <string name="browse_no_hits">No files match.</string>
+    <string name="browse_too_large_short">Too big</string>
+    <string name="browse_mode_all">Everything</string>
+    <string name="browse_mode_picked">Only what I pick</string>
+    <string name="folders_only_picked">%1$s of %2$s chosen</string>
+
+    <!-- Sorting -->
+    <string name="sort_label">Sort</string>
+    <string name="sort_newest">Newest first</string>
+    <string name="sort_oldest">Oldest first</string>
+    <string name="sort_largest">Largest first</string>
+    <string name="sort_smallest">Smallest first</string>
+    <string name="sort_name">Name</string>
+
+    <!-- Automatic backup -->
+    <string name="schedule_title">Back up automatically</string>
+    <string name="schedule_subtitle">The app can back your files up on its own, so you do not have to remember.</string>
+    <string name="schedule_off">Off</string>
+    <string name="schedule_off_detail">Only when you press the button yourself.</string>
+    <string name="schedule_daily">Every day</string>
+    <string name="schedule_daily_detail">A day between each run.</string>
+    <string name="schedule_weekly">Every week</string>
+    <string name="schedule_weekly_detail">Once a week. Suits most people.</string>
+    <string name="schedule_monthly">Every month</string>
+    <string name="schedule_monthly_detail">Once a month.</string>
+    <string name="schedule_what_title">What should be backed up automatically?</string>
+    <string name="schedule_nothing_chosen">Nothing is chosen, so the automatic backup would do nothing.</string>
+    <string name="schedule_wifi_note">Automatic backup runs on wifi only, and only when the battery is not low. Mobile data is never used.</string>
 </resources>

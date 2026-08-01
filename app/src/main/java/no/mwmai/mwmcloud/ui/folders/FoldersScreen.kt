@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -43,8 +45,10 @@ import kotlinx.coroutines.launch
 import no.mwmai.mwmcloud.Graph
 import no.mwmai.mwmcloud.R
 import no.mwmai.mwmcloud.data.media.BackupLimits
+import no.mwmai.mwmcloud.data.media.CategoryMode
 import no.mwmai.mwmcloud.data.media.CategorySummary
 import no.mwmai.mwmcloud.data.media.MediaCategory
+import no.mwmai.mwmcloud.settings.BackupSchedule
 import no.mwmai.mwmcloud.ui.PrimaryButton
 import no.mwmai.mwmcloud.ui.formatBytes
 import no.mwmai.mwmcloud.ui.formatCount
@@ -60,6 +64,7 @@ import no.mwmai.mwmcloud.work.UploadWorker
 fun FoldersScreen(
     onDone: () -> Unit,
     onBrowse: (MediaCategory) -> Unit,
+    onSchedule: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -67,7 +72,10 @@ fun FoldersScreen(
 
     val selected = remember { mutableStateMapOf<MediaCategory, Boolean>() }
     val summaries = remember { mutableStateMapOf<MediaCategory, CategorySummary>() }
+    val modes = remember { mutableStateMapOf<MediaCategory, CategoryMode>() }
+    val pickedCounts = remember { mutableStateMapOf<MediaCategory, Int>() }
     var scanning by remember { mutableStateOf(true) }
+    var schedule by remember { mutableStateOf(BackupSchedule.OFF) }
 
     // MediaStore returns nothing without permission, which would look like an
     // empty phone. Ask first, then scan, so the numbers are real either way.
@@ -81,7 +89,11 @@ fun FoldersScreen(
     }
 
     LaunchedEffect(Unit) {
-        Graph.settings(context).currentCategories().forEach { selected[it] = true }
+        val settings = Graph.settings(context)
+        settings.currentCategories().forEach { selected[it] = true }
+        modes.putAll(settings.currentCategoryModes())
+        settings.currentIncludedAll().forEach { (c, uris) -> pickedCounts[c] = uris.size }
+        schedule = settings.currentSchedule()
         val needed = MediaCategory.entries.mapNotNull { it.permission }.distinct().toTypedArray()
         if (needed.isEmpty()) {
             MediaCategory.entries.forEach { summaries[it] = Graph.mediaScanner(context).summarise(it) }
@@ -148,6 +160,11 @@ fun FoldersScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MwmColors.Background)
+            // Three category cards, the picker card, the schedule card and a
+            // button do not fit a phone screen. Without this the "Start backing
+            // up" button sat below the fold with no way to reach it, and the
+            // screen looked like it had no way forward at all.
+            .verticalScroll(rememberScrollState())
             .padding(MwmDimens.ScreenPadding),
     ) {
         Spacer(Modifier.height(24.dp))
@@ -171,6 +188,8 @@ fun FoldersScreen(
                 summary = summaries[category],
                 scanning = scanning,
                 checked = selected[category] == true,
+                mode = modes[category] ?: CategoryMode.ALL,
+                pickedCount = pickedCounts[category] ?: 0,
                 onCheckedChange = { selected[category] = it },
                 onOpen = { onBrowse(category) },
             )
@@ -185,7 +204,10 @@ fun FoldersScreen(
         )
 
         Spacer(Modifier.height(MwmDimens.CardSpacing))
-        Spacer(Modifier.weight(1f))
+
+        ScheduleCard(schedule = schedule, onOpen = onSchedule)
+
+        Spacer(Modifier.height(MwmDimens.CardSpacing))
 
         Text(
             text = stringResource(
@@ -283,6 +305,8 @@ private fun CategoryCard(
     summary: CategorySummary?,
     scanning: Boolean,
     checked: Boolean,
+    mode: CategoryMode,
+    pickedCount: Int,
     onCheckedChange: (Boolean) -> Unit,
     onOpen: () -> Unit,
 ) {
@@ -292,6 +316,7 @@ private fun CategoryCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth(),
     ) {
+      Column {
         Row(
             modifier = Modifier.fillMaxWidth().padding(20.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -314,9 +339,7 @@ private fun CategoryCard(
             Spacer(Modifier.size(16.dp))
 
             Column(
-                Modifier
-                    .weight(1f)
-                    .clickable(enabled = summary != null && summary.fileCount > 0, onClick = onOpen),
+                Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
@@ -328,6 +351,14 @@ private fun CategoryCard(
                     text = when {
                         scanning -> stringResource(R.string.folders_counting)
                         summary == null || summary.fileCount == 0 -> stringResource(R.string.folders_empty)
+                        // Say plainly that this category is down to a hand-picked
+                        // list. A card reading "3 575 photos" while only twelve are
+                        // going would be the app lying about its own settings.
+                        mode == CategoryMode.ONLY_PICKED -> stringResource(
+                            R.string.folders_only_picked,
+                            formatCount(pickedCount),
+                            formatCount(summary.fileCount),
+                        )
                         else -> stringResource(
                             unitFor(category),
                             formatCount(summary.fileCount),
@@ -335,7 +366,7 @@ private fun CategoryCard(
                         )
                     },
                     style = MaterialTheme.typography.labelMedium,
-                    color = MwmColors.Muted,
+                    color = if (mode == CategoryMode.ONLY_PICKED) MwmColors.Action else MwmColors.Muted,
                 )
 
                 // Never let oversized files disappear without saying so.
@@ -364,7 +395,75 @@ private fun CategoryCard(
                 ),
             )
         }
+
+        // The way to per-file choice, spelled out. It used to be an invisible tap
+        // target on the title, which meant nobody found it.
+        if (!scanning && (summary?.fileCount ?: 0) > 0) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onOpen)
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    stringResource(R.string.browse_open),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MwmColors.Action,
+                    modifier = Modifier.weight(1f),
+                )
+                Icon(
+                    painter = painterResource(R.drawable.ic_chevron_right),
+                    contentDescription = null,
+                    tint = MwmColors.Action,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+      }
     }
+}
+
+/** Automatic backup, summarised. The detail lives on its own screen. */
+@Composable
+private fun ScheduleCard(schedule: BackupSchedule, onOpen: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(MwmDimens.CardRadius),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen).padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    stringResource(R.string.schedule_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MwmColors.Text,
+                )
+                Text(
+                    stringResource(labelForSchedule(schedule)),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (schedule == BackupSchedule.OFF) MwmColors.Muted else MwmColors.Safe,
+                )
+            }
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_right),
+                contentDescription = null,
+                tint = MwmColors.Action,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
+}
+
+private fun labelForSchedule(s: BackupSchedule) = when (s) {
+    BackupSchedule.OFF -> R.string.schedule_off
+    BackupSchedule.DAILY -> R.string.schedule_daily
+    BackupSchedule.WEEKLY -> R.string.schedule_weekly
+    BackupSchedule.MONTHLY -> R.string.schedule_monthly
 }
 
 private fun iconFor(c: MediaCategory) = when (c) {

@@ -2,6 +2,7 @@ package no.mwmai.mwmcloud
 
 import android.content.Context
 import coil.ImageLoader
+import coil.decode.VideoFrameDecoder
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import okhttp3.OkHttpClient
@@ -111,6 +112,29 @@ object Graph {
                 .also { imageLoaderFor = key; cachedImageLoader = it }
         }
     }
+
+    @Volatile private var localLoader: ImageLoader? = null
+
+    /**
+     * Coil loader for thumbnails of files still on the phone.
+     *
+     * Separate from [imageLoader]: no credential, no network, and a video frame
+     * decoder so a film shows its first frame instead of a generic play icon.
+     * The point of the picker is that someone can tell which video is which.
+     */
+    fun localImageLoader(context: Context): ImageLoader =
+        localLoader ?: synchronized(this) {
+            localLoader ?: run {
+                val app = context.applicationContext
+                ImageLoader.Builder(app)
+                    .components { add(VideoFrameDecoder.Factory()) }
+                    .memoryCache { MemoryCache.Builder(app).maxSizePercent(0.15).build() }
+                    // No disk cache. These files are already on this device, so a
+                    // second copy of every thumbnail buys nothing but storage.
+                    .build()
+                    .also { localLoader = it }
+            }
+        }
 
     /**
      * 512 MB. Generous on purpose: scrolling back through a photo library is the

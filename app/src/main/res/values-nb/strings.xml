@@ -140,4 +140,37 @@
     <string name="verify_repair">Send det som mangler på nytt</string>
     <string name="verify_repairing">Legger i kø \u2026</string>
     <string name="verify_repaired">%1$s filer er lagt i kø igjen. Sikringen starter når telefonen er på trådløst nett.</string>
+
+    <!-- Velge enkeltfiler -->
+    <string name="browse_select_all">Velg alle</string>
+    <string name="browse_select_none">Fjern alle</string>
+    <string name="browse_search_hint">Søk i navn</string>
+    <string name="browse_no_hits">Ingen filer passer.</string>
+    <string name="browse_too_large_short">For stor</string>
+    <string name="browse_mode_all">Alt</string>
+    <string name="browse_mode_picked">Bare det jeg velger</string>
+    <string name="folders_only_picked">%1$s av %2$s valgt</string>
+
+    <!-- Sortering -->
+    <string name="sort_label">Sorter</string>
+    <string name="sort_newest">Nyeste først</string>
+    <string name="sort_oldest">Eldste først</string>
+    <string name="sort_largest">Størst først</string>
+    <string name="sort_smallest">Minst først</string>
+    <string name="sort_name">Navn</string>
+
+    <!-- Automatisk sikring -->
+    <string name="schedule_title">Sikre automatisk</string>
+    <string name="schedule_subtitle">Appen kan sikre filene dine av seg selv, uten at du trenger å huske det.</string>
+    <string name="schedule_off">Av</string>
+    <string name="schedule_off_detail">Bare når du trykker på knappen selv.</string>
+    <string name="schedule_daily">Hver dag</string>
+    <string name="schedule_daily_detail">Ett døgn mellom hver gang.</string>
+    <string name="schedule_weekly">Hver uke</string>
+    <string name="schedule_weekly_detail">Én gang i uka. Passer de fleste.</string>
+    <string name="schedule_monthly">Hver måned</string>
+    <string name="schedule_monthly_detail">Én gang i måneden.</string>
+    <string name="schedule_what_title">Hva skal sikres automatisk?</string>
+    <string name="schedule_nothing_chosen">Ingenting er valgt, så den automatiske sikringen gjør ingenting.</string>
+    <string name="schedule_wifi_note">Automatisk sikring går bare på trådløst nett, og bare når batteriet ikke er lavt. Mobildata blir aldri brukt.</string>
 </resources>

@@ -334,20 +334,33 @@ private fun VerifyPanel(running: Boolean) {
                                 error = context.getString(R.string.err_generic)
                                 return@launch
                             }
+                            // Same rule as the uploader, through the same
+                            // resolver. A verify that checked a different set
+                            // would report missing files that were never meant
+                            // to go, and call a good backup broken.
                             val settings = Graph.settings(context)
                             val excluded = settings.currentExcluded()
+                            val modes = settings.currentCategoryModes()
+                            val included = settings.currentIncludedAll()
                             val files = buildList {
-                                settings.currentCategories().forEach {
-                                    addAll(Graph.mediaScanner(context).scan(it))
+                                settings.currentCategories().forEach { category ->
+                                    addAll(
+                                        no.mwmai.mwmcloud.data.media.Selection.filter(
+                                            files = Graph.mediaScanner(context).scan(category),
+                                            mode = modes[category]
+                                                ?: no.mwmai.mwmcloud.data.media.CategoryMode.ALL,
+                                            excluded = excluded,
+                                            included = included[category].orEmpty(),
+                                        ),
+                                    )
                                 }
                                 addAll(
                                     Graph.safScanner(context).scan(
                                         settings.currentPickedFolders(),
                                         settings.currentPickedFiles(),
-                                    ),
+                                    ).filter { it.uri.toString() !in excluded },
                                 )
                             }.distinctBy { it.remotePath }
-                                .filter { it.uri.toString() !in excluded }
 
                             expected = files.size
                             result = no.mwmai.mwmcloud.data.verify.Verifier(context)

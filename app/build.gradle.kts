@@ -104,6 +104,7 @@ dependencies {
     implementation(libs.tink.android)
     implementation(libs.androidx.lifecycle.runtime.compose.livedata)
     implementation(libs.coil.compose)
+    implementation(libs.coil.video)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
 

@@ -46,6 +46,11 @@ Two consequences shape every decision here:
   a plain directory index in a browser, and that still works as a fallback, but it
   looks like an FTP listing and it asks the user to understand URLs. Photos, video
   and music open inside MWM Cloud instead.
+- **"Everything" and "only these" are different requests, and stay different.** A
+  category set to *everything* stores what you ticked off, so a photo taken
+  tomorrow is covered without being asked about. A category set to *only what I
+  pick* stores what you ticked on, and never adopts anything new. Guessing between
+  those is how a backup either misses new photos or quietly grows to 40 GB.
 
 ## How it works
 
@@ -145,6 +150,9 @@ original and the English are the translation, not the other way round.
 - [x] Reconcile against the server, so the counts are checked and not just asserted
 - [x] In-app file browser: month-grouped listing, photo viewer, video and music player
 - [x] In-app help explaining where the files went and what the app will not do
+- [x] Per-file picker with thumbnails, sort by date or size, search, select all
+- [x] Per-category choice between "everything" and "only what I pick"
+- [x] Scheduled automatic backup, with its own list of what it covers
 - [ ] First-run walkthrough with a visible confirmation at each step
 - [ ] Resumable uploads over SFTP, which is what would lift the 5 GB per-file limit
 - [ ] Provisioning service and invite codes for households

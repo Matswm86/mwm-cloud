@@ -9,16 +9,22 @@ import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.Constraints
 import androidx.work.Data
+import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import java.util.concurrent.TimeUnit
+import no.mwmai.mwmcloud.settings.BackupSchedule
 import no.mwmai.mwmcloud.Graph
 import no.mwmai.mwmcloud.R
+import no.mwmai.mwmcloud.data.media.CategoryMode
 import no.mwmai.mwmcloud.data.media.LocalFile
 import no.mwmai.mwmcloud.data.media.MediaCategory
+import no.mwmai.mwmcloud.data.media.Selection
 import no.mwmai.mwmcloud.net.Content
 import no.mwmai.mwmcloud.net.TransportException
 
@@ -64,29 +70,40 @@ class UploadWorker(
         // thousands of them.
         val alreadyDone = ledger.uploadedKeys()
 
+        // Files the user unticked, and the files they explicitly picked. Which of
+        // the two applies is the category's mode, resolved by Selection so the
+        // uploader and the interface can never disagree about what is chosen.
+        val excluded = settings.currentExcluded()
+        val modes = settings.currentCategoryModes()
+        val included = settings.currentIncludedAll()
+
         val found = mutableListOf<LocalFile>()
         for (category in categories) {
-            found += scanner.scan(category)
+            found += Selection.filter(
+                files = scanner.scan(category),
+                mode = modes[category] ?: CategoryMode.ALL,
+                excluded = excluded,
+                included = included[category].orEmpty(),
+            )
         }
         // Hand-picked files and folders, which cover everything MediaStore's
-        // fixed categories cannot reach.
-        found += Graph.safScanner(applicationContext).scan(
-            treeUris = settings.currentPickedFolders(),
-            fileUris = settings.currentPickedFiles(),
-        )
+        // fixed categories cannot reach. Always explicit choices, so no mode
+        // applies to them.
+        if (inputData.getBoolean(KEY_INCLUDE_PICKED, true)) {
+            found += Graph.safScanner(applicationContext).scan(
+                treeUris = settings.currentPickedFolders(),
+                fileUris = settings.currentPickedFiles(),
+            ).filter { it.uri.toString() !in excluded }
+        }
 
         if (found.isEmpty()) {
             return Result.failure(error(applicationContext.getString(R.string.err_nothing_selected)))
         }
 
-        // Files the user unticked in the per-category browser.
-        val excluded = settings.currentExcluded()
-
         // Distinct by remote path: a file can be reached both by category and by
         // a picked folder, and uploading it twice would double the reported work.
         val pending = found
             .distinctBy { it.remotePath }
-            .filter { it.uri.toString() !in excluded }
             .filter { it.dedupeKey !in alreadyDone }
 
         if (pending.isEmpty()) return Result.success(progress(0, 0))
@@ -206,7 +223,11 @@ class UploadWorker(
 
     companion object {
         const val WORK_NAME = "mwmcloud-upload"
+
+        /** Separate name, so a weekly run never cancels a backup the user just started. */
+        const val PERIODIC_WORK_NAME = "mwmcloud-upload-periodic"
         const val KEY_CATEGORIES = "categories"
+        const val KEY_INCLUDE_PICKED = "include_picked"
         const val KEY_DONE = "done"
         const val KEY_TOTAL = "total"
         const val KEY_ERROR = "error"
@@ -233,15 +254,62 @@ class UploadWorker(
                         .setRequiresBatteryNotLow(true)
                         .build(),
                 )
-                .setInputData(
-                    Data.Builder()
-                        .putStringArray(KEY_CATEGORIES, categories.map { it.name }.toTypedArray())
-                        .build(),
-                )
+                .setInputData(inputFor(categories, includePicked = true))
                 .build()
 
             WorkManager.getInstance(context)
                 .enqueueUniqueWork(WORK_NAME, ExistingWorkPolicy.REPLACE, request)
         }
+
+        /**
+         * Installs, replaces or cancels the automatic backup.
+         *
+         * [BackupSchedule.OFF] cancels rather than scheduling something that does
+         * nothing, so a user who turns it off does not keep a wakeup on the books.
+         *
+         * UPDATE rather than REPLACE: changing which categories run automatically
+         * should not restart the clock. REPLACE would push the next run a full
+         * week out every time the user opened the screen and changed their mind.
+         */
+        fun schedule(
+            context: Context,
+            schedule: BackupSchedule,
+            categories: Set<MediaCategory>,
+            includePicked: Boolean,
+        ) {
+            val manager = WorkManager.getInstance(context)
+            if (schedule == BackupSchedule.OFF || (categories.isEmpty() && !includePicked)) {
+                manager.cancelUniqueWork(PERIODIC_WORK_NAME)
+                return
+            }
+
+            val request = PeriodicWorkRequestBuilder<UploadWorker>(schedule.hours, TimeUnit.HOURS)
+                .setConstraints(
+                    Constraints.Builder()
+                        // Automatic runs are wifi-only with no override. An
+                        // unattended backup must never be able to spend mobile data.
+                        .setRequiredNetworkType(NetworkType.UNMETERED)
+                        .setRequiresBatteryNotLow(true)
+                        .build(),
+                )
+                .setInputData(inputFor(categories, includePicked))
+                .build()
+
+            manager.enqueueUniquePeriodicWork(
+                PERIODIC_WORK_NAME,
+                ExistingPeriodicWorkPolicy.UPDATE,
+                request,
+            )
+        }
+
+        fun cancelPeriodic(context: Context) {
+            WorkManager.getInstance(context).cancelUniqueWork(PERIODIC_WORK_NAME)
+        }
+
+        private fun inputFor(categories: Set<MediaCategory>, includePicked: Boolean): Data =
+            Data.Builder()
+                .putStringArray(KEY_CATEGORIES, categories.map { it.name }.toTypedArray())
+                .putBoolean(KEY_INCLUDE_PICKED, includePicked)
+                .build()
     }
 }

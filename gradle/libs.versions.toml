@@ -63,6 +63,12 @@ tink-android = { group = "com.google.crypto.tink", name = "tink-android", versio
 # authenticated client and one less dependency to keep in step.
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 
+# Video thumbnails in the on-device file picker. Coil decodes an image content://
+# URI on its own, but a video URI needs a frame pulled out of it first, and that
+# decoder lives in this artifact. Without it the picker shows a play icon for
+# every film and the user cannot tell one from another.
+coil-video = { group = "io.coil-kt", name = "coil-video", version.ref = "coil" }
+
 # Video and audio playback straight off the box. ExoPlayer's HTTP data source
 # takes default request headers, which is how the Basic credential reaches every
 # range request it makes while seeking.

@@ -20,6 +20,7 @@ import no.mwmai.mwmcloud.ui.files.FilesScreen
 import no.mwmai.mwmcloud.ui.folders.FoldersScreen
 import no.mwmai.mwmcloud.ui.help.HelpScreen
 import no.mwmai.mwmcloud.ui.home.HomeScreen
+import no.mwmai.mwmcloud.ui.schedule.ScheduleScreen
 import no.mwmai.mwmcloud.ui.setup.SetupScreen
 import no.mwmai.mwmcloud.ui.welcome.WelcomeScreen
 
@@ -32,6 +33,7 @@ private object Routes {
     const val FILES = "files"
     const val VIEWER = "viewer"
     const val HELP = "help"
+    const val SCHEDULE = "schedule"
 }
 
 @Composable
@@ -66,7 +68,11 @@ fun AppNav(modifier: Modifier = Modifier) {
                     nav.navigate(Routes.HOME) { popUpTo(Routes.FOLDERS) { inclusive = true } }
                 },
                 onBrowse = { category -> nav.navigate("${Routes.BROWSE}/${category.name}") },
+                onSchedule = { nav.navigate(Routes.SCHEDULE) },
             )
+        }
+        composable(Routes.SCHEDULE) {
+            ScheduleScreen(onBack = { nav.popBackStack() })
         }
         composable("${Routes.BROWSE}/{category}") { entry ->
             val category = runCatching {
