@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  English strings. Norwegian (values-nb) is the authored original; this file is the
-  translation. Keep both in sync, and keep the plain-language rule in both: say
-  "backed up", never "synced"; say "safe", never "OK".
+  English. Norwegian (values-nb) is the authored original; this is the translation.
+  Keep the plain-language rule in both: say "backed up", never "synced";
+  say "safe", never "OK".
 -->
 <resources>
     <string name="app_name">MWM Cloud</string>
+    <string name="back">Back</string>
 
     <!-- Welcome -->
     <string name="welcome_headline">Your photos are looked after.</string>
@@ -13,4 +14,55 @@
     <string name="welcome_start">Get started</string>
     <string name="welcome_have_code">I have a code</string>
     <string name="welcome_no_card">No card. No subscription.</string>
+
+    <!-- Setup -->
+    <string name="setup_title">Connect your storage</string>
+    <string name="setup_body">Enter the address and login you were given when the storage box was set up.</string>
+    <string name="setup_host">Address</string>
+    <string name="setup_user">Username</string>
+    <string name="setup_pass">Password</string>
+    <string name="setup_test">Test the connection</string>
+
+    <!-- Errors. Always specific: "something went wrong" helps nobody. -->
+    <string name="err_auth">That username or password does not match. Check it is typed exactly right.</string>
+    <string name="err_network">Could not reach it. Is the phone online?</string>
+    <string name="err_not_found">That address was not found. Check the spelling.</string>
+    <string name="err_generic">That did not work. Try once more.</string>
+
+    <!-- Folders -->
+    <string name="folders_title">What should be kept safe?</string>
+    <string name="folders_subtitle">You can change this at any time.</string>
+    <string name="folders_counting">Counting…</string>
+    <string name="folders_empty">Nothing found</string>
+    <string name="folders_start">Start backing up</string>
+    <string name="folders_selected">%1$d of %2$d chosen · about %3$s</string>
+
+    <string name="cat_images">Photos</string>
+    <string name="cat_audio">Music</string>
+    <string name="cat_video">Videos</string>
+    <string name="cat_documents">Documents</string>
+
+    <string name="unit_images">%1$s photos · %2$s</string>
+    <string name="unit_audio">%1$s songs · %2$s</string>
+    <string name="unit_video">%1$s films · %2$s</string>
+    <string name="unit_documents">%1$s files · %2$s</string>
+
+    <!-- Home -->
+    <string name="home_safe">Everything is safe.</string>
+    <string name="home_files_safe">%1$s files are backed up</string>
+    <string name="home_working">Backing up…</string>
+    <string name="home_progress">%1$s of %2$s done</string>
+    <string name="home_preparing">Working out what is missing…</string>
+    <string name="home_attention">Something needs you.</string>
+    <string name="home_not_started">Nothing is backed up yet.</string>
+    <string name="home_not_started_body">Tap the button below and the app will start.</string>
+    <string name="home_files_counted">files backed up</string>
+    <string name="home_back_up_now">Back up now</string>
+    <string name="home_change_folders">Change what gets backed up</string>
+    <string name="home_wifi_note">Backing up only happens on wifi, so mobile data is never used.</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_backup">Backup</string>
+    <string name="notif_backing_up">Backing up your files</string>
+    <string name="notif_progress">%1$d of %2$d done</string>
 </resources>

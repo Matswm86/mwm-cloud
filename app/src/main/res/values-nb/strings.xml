@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Norsk bokmål. Dette er originalen — engelsk er oversettelsen.
+  Norsk bokmål. Dette er originalen; engelsk er oversettelsen.
   Regel: skriv «sikret», ikke «synkronisert». Skriv «trygt», ikke «OK».
   Ingen engelske låneord der et norsk ord finnes.
 -->
 <resources>
     <string name="app_name">MWM Cloud</string>
+    <string name="back">Tilbake</string>
 
     <!-- Velkommen -->
     <string name="welcome_headline">Bildene dine blir tatt vare på.</string>
@@ -13,4 +14,55 @@
     <string name="welcome_start">Kom i gang</string>
     <string name="welcome_have_code">Jeg har en kode</string>
     <string name="welcome_no_card">Ingen kort. Ingen abonnement.</string>
+
+    <!-- Oppsett -->
+    <string name="setup_title">Koble til lagringsplassen</string>
+    <string name="setup_body">Skriv inn adressen og innloggingen du fikk da lagringsboksen ble satt opp.</string>
+    <string name="setup_host">Adresse</string>
+    <string name="setup_user">Brukernavn</string>
+    <string name="setup_pass">Passord</string>
+    <string name="setup_test">Test tilkoblingen</string>
+
+    <!-- Feil. Alltid konkrete: «noe gikk galt» hjelper ingen. -->
+    <string name="err_auth">Brukernavnet eller passordet stemmer ikke. Sjekk at det er skrevet helt likt.</string>
+    <string name="err_network">Fikk ikke kontakt. Er telefonen på nett?</string>
+    <string name="err_not_found">Fant ikke den adressen. Sjekk at den er skrevet riktig.</string>
+    <string name="err_generic">Det virket ikke. Prøv en gang til.</string>
+
+    <!-- Velg mapper -->
+    <string name="folders_title">Hva skal tas vare på?</string>
+    <string name="folders_subtitle">Du kan endre dette når som helst.</string>
+    <string name="folders_counting">Teller …</string>
+    <string name="folders_empty">Ingenting funnet</string>
+    <string name="folders_start">Start sikringen</string>
+    <string name="folders_selected">%1$d av %2$d valgt · omtrent %3$s</string>
+
+    <string name="cat_images">Bilder</string>
+    <string name="cat_audio">Musikk</string>
+    <string name="cat_video">Videoer</string>
+    <string name="cat_documents">Dokumenter</string>
+
+    <string name="unit_images">%1$s bilder · %2$s</string>
+    <string name="unit_audio">%1$s sanger · %2$s</string>
+    <string name="unit_video">%1$s filmer · %2$s</string>
+    <string name="unit_documents">%1$s filer · %2$s</string>
+
+    <!-- Hjem -->
+    <string name="home_safe">Alt er trygt.</string>
+    <string name="home_files_safe">%1$s filer er sikret</string>
+    <string name="home_working">Sikrer filene …</string>
+    <string name="home_progress">%1$s av %2$s er ferdig</string>
+    <string name="home_preparing">Finner ut hva som mangler …</string>
+    <string name="home_attention">Noe trenger deg.</string>
+    <string name="home_not_started">Ingenting er sikret ennå.</string>
+    <string name="home_not_started_body">Trykk på knappen under, så begynner appen.</string>
+    <string name="home_files_counted">filer sikret</string>
+    <string name="home_back_up_now">Sikre nå</string>
+    <string name="home_change_folders">Endre hva som sikres</string>
+    <string name="home_wifi_note">Sikringen skjer bare på trådløst nett, så mobildata blir ikke brukt.</string>
+
+    <!-- Varsler -->
+    <string name="notif_channel_backup">Sikring</string>
+    <string name="notif_backing_up">Sikrer filene dine</string>
+    <string name="notif_progress">%1$d av %2$d er ferdig</string>
 </resources>

@@ -99,6 +99,10 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.okhttp)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.tink.android)
+    implementation(libs.androidx.lifecycle.runtime.compose.livedata)
 
     testImplementation(libs.junit)
     testImplementation(libs.okhttp.mockwebserver)
