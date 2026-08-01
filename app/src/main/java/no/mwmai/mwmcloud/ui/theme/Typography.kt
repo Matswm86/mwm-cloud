@@ -1,6 +1,7 @@
 package no.mwmai.mwmcloud.ui.theme
 
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -18,6 +19,7 @@ import no.mwmai.mwmcloud.R
  * optical size is pinned to the display end and width to normal, so headings look
  * the same as the mockups regardless of rendered size.
  */
+@OptIn(ExperimentalTextApi::class)
 private fun bricolage(weight: Int) = Font(
     resId = R.font.bricolage_grotesque_variable,
     weight = FontWeight(weight),
@@ -28,6 +30,7 @@ private fun bricolage(weight: Int) = Font(
     ),
 )
 
+@OptIn(ExperimentalTextApi::class)
 private fun figtree(weight: Int) = Font(
     resId = R.font.figtree_variable,
     weight = FontWeight(weight),
