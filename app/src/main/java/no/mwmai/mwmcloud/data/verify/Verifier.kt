@@ -3,6 +3,7 @@ package no.mwmai.mwmcloud.data.verify
 import android.content.Context
 import no.mwmai.mwmcloud.Graph
 import no.mwmai.mwmcloud.data.media.LocalFile
+import no.mwmai.mwmcloud.net.FailureKind
 import no.mwmai.mwmcloud.net.Transport
 import no.mwmai.mwmcloud.net.TransportException
 import no.mwmai.mwmcloud.settings.BoxCredentials
@@ -55,8 +56,15 @@ class Verifier(private val context: Context) {
             val remote = try {
                 transport.list(dir).associateBy { it.name }
             } catch (e: TransportException) {
-                // A directory that does not exist means everything in it is
-                // missing. That is a finding, not an error to swallow.
+                // A directory that does not exist means everything in it really
+                // is missing. That is a finding.
+                //
+                // Anything else is not. Treating an auth failure, a dropped
+                // connection or an unparseable response as "missing" is how this
+                // told a user that 444 files they had just watched upload were
+                // all gone. A backup that cannot be checked is an unknown, and
+                // the honest answer is to say the check failed.
+                if (e.kind != FailureKind.NOT_FOUND) throw e
                 emptyMap()
             }
 

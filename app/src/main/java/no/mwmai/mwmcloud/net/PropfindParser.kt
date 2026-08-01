@@ -1,6 +1,7 @@
 package no.mwmai.mwmcloud.net
 
 import java.io.InputStream
+import java.io.StringReader
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -8,6 +9,7 @@ import java.util.TimeZone
 import javax.xml.parsers.DocumentBuilderFactory
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+import org.xml.sax.InputSource
 
 /**
  * Parses a WebDAV `PROPFIND` multistatus response.
@@ -30,20 +32,7 @@ internal object PropfindParser {
      */
     fun parse(input: InputStream, basePath: String): List<RemoteEntry> {
         val doc = try {
-            DocumentBuilderFactory.newInstance()
-                .apply {
-                    isNamespaceAware = true
-                    // The response is untrusted input from the network. Disable
-                    // external entity resolution so a hostile or compromised
-                    // server cannot turn a directory listing into an XXE read.
-                    setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
-                    setFeature("http://xml.org/sax/features/external-general-entities", false)
-                    setFeature("http://xml.org/sax/features/external-parameter-entities", false)
-                    isXIncludeAware = false
-                    isExpandEntityReferences = false
-                }
-                .newDocumentBuilder()
-                .parse(input)
+            newSafeBuilder().parse(input)
         } catch (e: Exception) {
             throw TransportException(FailureKind.PROTOCOL, "Could not parse PROPFIND response", e)
         }
@@ -57,6 +46,45 @@ internal object PropfindParser {
             entry?.takeIf { normalise(it.path) != normalisedBase }
         }
     }
+
+    /**
+     * A parser that will not fetch anything the response asks it to.
+     *
+     * The hardening features below are the standard JVM way to close XXE, and on
+     * a desktop JVM they work. **On Android they all throw.** Android's
+     * `DocumentBuilderFactoryImpl.setFeature` recognises exactly two names,
+     * namespaces and validation, and throws `ParserConfigurationException` for
+     * anything else *regardless of the value passed*. Setting them unguarded
+     * meant every listing on a real phone failed to parse, which surfaced as
+     * "could not reach your storage" on the file screen and, worse, as a verify
+     * that reported all 444 freshly uploaded files missing. Uploading never broke,
+     * because PUT and MKCOL do not parse a response body, so the fault sat
+     * invisible until the first screen that listed anything.
+     *
+     * So the features are attempted and their rejection tolerated, and the actual
+     * guarantee comes from the entity resolver: every external entity resolves to
+     * an empty document, on every platform, whether or not a doctype got through.
+     */
+    private fun newSafeBuilder(): javax.xml.parsers.DocumentBuilder {
+        val factory = DocumentBuilderFactory.newInstance().apply {
+            isNamespaceAware = true
+            runCatching { isXIncludeAware = false }
+            runCatching { isExpandEntityReferences = false }
+            HARDENING.forEach { (name, value) -> runCatching { setFeature(name, value) } }
+        }
+        return factory.newDocumentBuilder().apply {
+            // The load-bearing defence. A hostile or compromised server cannot
+            // turn a directory listing into a read of a local file, because
+            // nothing it names is ever fetched.
+            setEntityResolver { _, _ -> InputSource(StringReader("")) }
+        }
+    }
+
+    private val HARDENING = listOf(
+        "http://apache.org/xml/features/disallow-doctype-decl" to true,
+        "http://xml.org/sax/features/external-general-entities" to false,
+        "http://xml.org/sax/features/external-parameter-entities" to false,
+    )
 
     private fun parseResponse(response: Element): RemoteEntry? {
         val rawHref = response.childText(DAV_NS, "href") ?: return null
