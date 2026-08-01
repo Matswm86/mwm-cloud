@@ -12,6 +12,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okio.BufferedSink
 import okio.source
@@ -146,7 +147,7 @@ class WebDavTransport(
 
     companion object {
         private val METHODS_REQUIRING_BODY = setOf("POST", "PUT", "PATCH", "PROPFIND")
-        private val EMPTY_BODY = ByteArray(0).let { RequestBody.create(null, it) }
+        private val EMPTY_BODY = ByteArray(0).toRequestBody()
 
         /**
          * Timeouts are generous on write because a large video on a slow

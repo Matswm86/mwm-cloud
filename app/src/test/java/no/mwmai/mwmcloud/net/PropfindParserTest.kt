@@ -57,10 +57,34 @@ class PropfindParserTest {
 
     @Test
     fun `namespace prefix is irrelevant`() {
-        // Same document, lowercase prefix. Servers are free to choose, and some do.
-        val lowercase = hetznerStyle.replace("D:", "d:").replace("xmlns:d=", "xmlns:d=")
-        val entries = PropfindParser.parse(lowercase.byteInputStream(), "/Bilder/2026/08")
-        assertEquals(listOf("/Bilder/2026/08/IMG_1234.jpg"), entries.map { it.path })
+        // Same document with a lowercase prefix. Servers pick their own, and some
+        // use none at all, so matching must be on namespace URI and local name.
+        // The declaration has to be renamed too, or the document is simply invalid.
+        val lowercase = hetznerStyle
+            .replace("D:", "d:")
+            .replace("xmlns:D=", "xmlns:d=")
+        assertEquals(
+            listOf("/Bilder/2026/08/IMG_1234.jpg"),
+            PropfindParser.parse(lowercase.byteInputStream(), "/Bilder/2026/08").map { it.path },
+        )
+
+        // And with no prefix at all, via a default namespace.
+        val unprefixed = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <multistatus xmlns="DAV:">
+              <response>
+                <href>/Bilder/a.jpg</href>
+                <propstat>
+                  <prop><resourcetype/><getcontentlength>3</getcontentlength></prop>
+                  <status>HTTP/1.1 200 OK</status>
+                </propstat>
+              </response>
+            </multistatus>
+        """.trimIndent()
+        assertEquals(
+            listOf("/Bilder/a.jpg"),
+            PropfindParser.parse(unprefixed.byteInputStream(), "/Bilder").map { it.path },
+        )
     }
 
     @Test
