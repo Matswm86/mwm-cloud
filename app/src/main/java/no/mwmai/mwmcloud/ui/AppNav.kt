@@ -1,6 +1,7 @@
 package no.mwmai.mwmcloud.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
@@ -11,8 +12,13 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.first
 import no.mwmai.mwmcloud.Graph
 import no.mwmai.mwmcloud.data.media.MediaCategory
+import no.mwmai.mwmcloud.data.remote.RemoteFile
+import no.mwmai.mwmcloud.settings.BoxCredentials
 import no.mwmai.mwmcloud.ui.browse.BrowseScreen
+import no.mwmai.mwmcloud.ui.files.FileViewerScreen
+import no.mwmai.mwmcloud.ui.files.FilesScreen
 import no.mwmai.mwmcloud.ui.folders.FoldersScreen
+import no.mwmai.mwmcloud.ui.help.HelpScreen
 import no.mwmai.mwmcloud.ui.home.HomeScreen
 import no.mwmai.mwmcloud.ui.setup.SetupScreen
 import no.mwmai.mwmcloud.ui.welcome.WelcomeScreen
@@ -23,6 +29,9 @@ private object Routes {
     const val FOLDERS = "folders"
     const val HOME = "home"
     const val BROWSE = "browse"
+    const val FILES = "files"
+    const val VIEWER = "viewer"
+    const val HELP = "help"
 }
 
 @Composable
@@ -66,7 +75,51 @@ fun AppNav(modifier: Modifier = Modifier) {
             BrowseScreen(category = category, onBack = { nav.popBackStack() })
         }
         composable(Routes.HOME) {
-            HomeScreen(onChangeFolders = { nav.navigate(Routes.FOLDERS) })
+            HomeScreen(
+                onChangeFolders = { nav.navigate(Routes.FOLDERS) },
+                onSeeFiles = { nav.navigate(Routes.FILES) },
+                onHelp = { nav.navigate(Routes.HELP) },
+            )
+        }
+        composable(Routes.FILES) {
+            FilesScreen(
+                onBack = { nav.popBackStack() },
+                onOpen = { file ->
+                    // The file is handed over through a shared holder rather than
+                    // encoded into the route. A remote path can contain any
+                    // character a filename can, and round-tripping that through a
+                    // navigation argument is a decoding bug waiting to happen.
+                    OpenFile.selected = file
+                    nav.navigate(Routes.VIEWER)
+                },
+            )
+        }
+        composable(Routes.VIEWER) {
+            val file = OpenFile.selected
+            if (file == null) {
+                // Only reachable if the process was killed while the viewer was
+                // on top. Going back is honest; guessing at a file is not.
+                LaunchedEffect(Unit) { nav.popBackStack() }
+            } else {
+                val creds by produceState<BoxCredentials?>(initialValue = null) {
+                    value = Graph.credentialStore(context).current()
+                }
+                FileViewerScreen(file = file, creds = creds, onBack = { nav.popBackStack() })
+            }
+        }
+        composable(Routes.HELP) {
+            HelpScreen(onBack = { nav.popBackStack() })
         }
     }
+}
+
+/**
+ * The file the viewer is showing.
+ *
+ * A single slot, written immediately before navigating and read immediately
+ * after. Not state that outlives the transition, and deliberately not a
+ * navigation argument: see the call site.
+ */
+private object OpenFile {
+    @Volatile var selected: RemoteFile? = null
 }

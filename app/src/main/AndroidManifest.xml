@@ -46,6 +46,21 @@
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
 
+        <!--
+          Hands a downloaded document to whatever app the user already has, as a
+          content URI with a one-shot read grant. The alternative, passing the
+          box URL out to another app, would hand that app the storage credentials.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

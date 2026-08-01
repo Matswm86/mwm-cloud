@@ -8,9 +8,10 @@ is roughly EUR 3.20/month for 1 TB with unlimited traffic and speaks open protoc
 (SFTP, WebDAV) instead of a proprietary client. Nothing in the app is tied to that
 vendor beyond one `Transport` implementation.
 
-**Status: early but usable.** You can connect it to a storage box and back up
-photos, music and video today. Documents and household invite codes are not built
-yet. See [Roadmap](#roadmap).
+**Status: early but usable.** You can connect it to a storage box, back up photos,
+music and video, and then browse, view and play them back inside the app without
+ever seeing a URL. Household invite codes are not built yet. See
+[Roadmap](#roadmap).
 
 ## Download
 
@@ -39,6 +40,12 @@ Two consequences shape every decision here:
 - **Counts are verified against the server, not asserted.** "1204 of 1204 backed up"
   comes from listing the remote and comparing, not from counting successful uploads.
   An upload that succeeded and a file that is actually there are different claims.
+  When the check finds a gap, it can drop those ledger rows and queue the files
+  again, so finding a problem and fixing it are one action.
+- **Getting your files back never means leaving the app.** A storage box does serve
+  a plain directory index in a browser, and that still works as a fallback, but it
+  looks like an FTP listing and it asks the user to understand URLs. Photos, video
+  and music open inside MWM Cloud instead.
 
 ## How it works
 
@@ -134,15 +141,18 @@ original and the English are the translation, not the other way round.
 - [x] WebDAV transport and encrypted credential store
 - [x] Media enumeration, upload ledger, background upload
 - [x] Welcome, connection setup, folder picker, home screen
-- [ ] Documents, via a folder picker (MediaStore has no document category)
-- [ ] Reconcile against the server, so the counts are checked and not just asserted
+- [x] Documents and anything else, via the system folder and file picker
+- [x] Reconcile against the server, so the counts are checked and not just asserted
+- [x] In-app file browser: month-grouped listing, photo viewer, video and music player
+- [x] In-app help explaining where the files went and what the app will not do
+- [ ] First-run walkthrough with a visible confirmation at each step
 - [ ] Resumable uploads over SFTP, which is what would lift the 5 GB per-file limit
 - [ ] Provisioning service and invite codes for households
-- [ ] In-app file browser
 
 Current limits worth knowing: single files above 5 GB are skipped and reported,
-because WebDAV `PUT` cannot resume a broken upload. Categories are all-or-nothing;
-there is no per-file picker.
+because WebDAV `PUT` cannot resume a broken upload. The box serves no thumbnail
+API, so the photo grid downloads full images and downsamples them on the device;
+Coil's disk cache keeps that to one fetch per photo per install.
 
 ## Licence
 

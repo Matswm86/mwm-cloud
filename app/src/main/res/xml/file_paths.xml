@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Scoped to the one cache folder the viewer downloads into. Deliberately not
+  <cache-path path="."/> or <external-path/>: a FileProvider grants read access to
+  whatever it can address, and the receiving app has no business seeing the
+  credential keyset, the upload ledger, or anything else the app keeps.
+-->
+<paths>
+    <cache-path name="viewer_docs" path="viewer_docs/" />
+</paths>

@@ -103,6 +103,9 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.tink.android)
     implementation(libs.androidx.lifecycle.runtime.compose.livedata)
+    implementation(libs.coil.compose)
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.ui)
 
     testImplementation(libs.junit)
     testImplementation(libs.okhttp.mockwebserver)

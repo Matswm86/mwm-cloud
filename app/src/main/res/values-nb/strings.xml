@@ -84,4 +84,60 @@
     <string name="verify_all_good">Alle %1$s filene ligger på lagringsplassen, i riktig størrelse.</string>
     <string name="verify_problems">%1$s av %2$s bekreftet. %3$d mangler, %4$d har feil størrelse.</string>
     <string name="verify_button">Sjekk nå</string>
+
+    <!-- Filer: alt som ligger på lagringsplassen, sett fra appen -->
+    <string name="files_title">Filene dine</string>
+    <string name="files_subtitle">Alt som ligger trygt på lagringsplassen.</string>
+    <string name="files_loading">Henter oversikten \u2026</string>
+    <string name="files_loading_month">henter \u2026</string>
+    <string name="files_empty">Ingenting er sikret her ennå.</string>
+    <string name="files_error">Fikk ikke kontakt med lagringsplassen.</string>
+    <string name="files_no_hits">Ingen filer med det navnet.</string>
+    <string name="files_search_hint">Søk etter filnavn</string>
+    <string name="files_section_picked">Valgt</string>
+    <string name="files_doc_hint">Denne filtypen åpnes i en app du allerede har på telefonen.</string>
+    <string name="files_doc_open">Åpne filen</string>
+    <string name="files_doc_failed">Fikk ikke åpnet filen. Telefonen har kanskje ingen app som leser denne typen.</string>
+
+    <!--
+      Månedsnavn til overskriftene i Filer. Stien på lagringsplassen inneholder
+      bare år og måned, så navnet kommer herfra og ikke fra en dato appen finner på.
+    -->
+    <string-array name="month_names">
+        <item>Januar</item>
+        <item>Februar</item>
+        <item>Mars</item>
+        <item>April</item>
+        <item>Mai</item>
+        <item>Juni</item>
+        <item>Juli</item>
+        <item>August</item>
+        <item>September</item>
+        <item>Oktober</item>
+        <item>November</item>
+        <item>Desember</item>
+    </string-array>
+
+    <!-- Hjelp -->
+    <string name="help_title">Hvor er filene mine?</string>
+    <string name="help_where_title">På din egen lagringsplass</string>
+    <string name="help_where_body">Bildene ligger i Bilder, musikken i Musikk, filmene i Video, og det du har valgt selv i Valgt. Innenfor hver av dem er filene sortert på år og måned.</string>
+    <string name="help_phone_title">Telefonen røres ikke</string>
+    <string name="help_phone_body">Appen kopierer. Den sletter aldri noe fra telefonen, uansett hva du gjør her. Vil du frigjøre plass, gjør du det selv, etterpå, når du har sett at filene er der.</string>
+    <string name="help_computer_title">Fra en datamaskin</string>
+    <string name="help_computer_body">Du kan også nå filene fra en datamaskin på adressen %1$s, med samme brukernavn og passord som du satte opp her. Det er en nødløsning: alt du trenger til daglig ligger under «Filene dine».</string>
+    <string name="help_computer_body_unknown">Når tilkoblingen er satt opp, kan du også nå filene fra en datamaskin med samme brukernavn og passord.</string>
+    <string name="help_wifi_title">Bare på trådløst nett</string>
+    <string name="help_wifi_body">Sikringen går bare når telefonen er på trådløst nett og har nok batteri. Mobildata blir aldri brukt.</string>
+    <string name="help_limits_title">Det appen ikke gjør ennå</string>
+    <string name="help_limits_body">Filer over 5 GB blir hoppet over, og du får vite hvilke. Appen sletter heller aldri noe på lagringsplassen.</string>
+
+    <!-- Hjem: nye knapper -->
+    <string name="home_see_files">Se filene dine</string>
+    <string name="home_help">Hvor er filene mine?</string>
+
+    <!-- Sjekk: rette opp det som mangler -->
+    <string name="verify_repair">Send det som mangler på nytt</string>
+    <string name="verify_repairing">Legger i kø \u2026</string>
+    <string name="verify_repaired">%1$s filer er lagt i kø igjen. Sikringen starter når telefonen er på trådløst nett.</string>
 </resources>

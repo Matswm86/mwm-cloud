@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A framed picture with a sun and a hill. 24 dp grid, 1.8 stroke, round joins. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+    <path
+        android:pathData="M4.2,4.8 L19.8,4.8 A0,0 0 0,1 19.8,4.8 L19.8,19.2 L4.2,19.2 Z"
+        android:strokeColor="#14212B"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M9,10.2m-1.5,0a1.5,1.5 0,1 0,3 0a1.5,1.5 0,1 0,-3 0"
+        android:strokeColor="#14212B"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M4.2,16.2 L9.6,11.4 L19.8,19.2"
+        android:strokeColor="#14212B"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

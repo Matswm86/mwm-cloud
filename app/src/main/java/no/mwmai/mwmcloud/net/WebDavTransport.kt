@@ -36,17 +36,7 @@ class WebDavTransport(
 
     private val base: HttpUrl = baseUrl.trimEnd('/').toHttpUrl()
 
-    /**
-     * UTF-8, explicitly. OkHttp's [Credentials.basic] defaults to ISO-8859-1 per
-     * the older RFC 2617 reading, and a Storage Box rejects that: a password
-     * containing `§` authenticates as UTF-8 (207) and fails as ISO-8859-1 (401).
-     * Verified against a live box on 2026-08-01.
-     *
-     * This is not an edge case here. Norwegian passwords routinely contain æ, ø
-     * and å, and the symptom would be an unexplained "wrong password" for exactly
-     * the users this app is for.
-     */
-    private val credential = Credentials.basic(username, password, Charsets.UTF_8)
+    private val credential = basicAuth(username, password)
 
     override suspend fun testConnection() = io {
         // Depth 0 asks only about the root itself: cheapest call that still
@@ -113,11 +103,7 @@ class WebDavTransport(
         }
     }
 
-    private fun url(path: String): HttpUrl {
-        val builder = base.newBuilder()
-        path.trim('/').split('/').filter { it.isNotEmpty() }.forEach(builder::addPathSegment)
-        return builder.build()
-    }
+    private fun url(path: String): HttpUrl = remoteUrl(base, path)
 
     private fun request(
         method: String,
@@ -159,6 +145,38 @@ class WebDavTransport(
     companion object {
         private val METHODS_REQUIRING_BODY = setOf("POST", "PUT", "PATCH", "PROPFIND")
         private val EMPTY_BODY = ByteArray(0).toRequestBody()
+
+        /**
+         * UTF-8, explicitly. OkHttp's [Credentials.basic] defaults to ISO-8859-1
+         * per the older RFC 2617 reading, and a Storage Box rejects that: a
+         * password containing `§` authenticates as UTF-8 (207) and fails as
+         * ISO-8859-1 (401). Verified against a live box on 2026-08-01.
+         *
+         * This is not an edge case here. Norwegian passwords routinely contain
+         * æ, ø and å, and the symptom would be an unexplained "wrong password"
+         * for exactly the users this app is for.
+         *
+         * Public because the in-app viewer needs the same header: Coil and
+         * ExoPlayer fetch straight off the box rather than through [Transport],
+         * and a second, subtly different credential builder is exactly how that
+         * bug would come back.
+         */
+        fun basicAuth(username: String, password: String): String =
+            Credentials.basic(username, password, Charsets.UTF_8)
+
+        /**
+         * Builds an absolute URL for a remote path, percent-encoding each segment
+         * separately so that a filename containing `#`, `?` or a space survives.
+         * Shared with the viewer for the same reason as [basicAuth].
+         */
+        fun remoteUrl(base: HttpUrl, path: String): HttpUrl {
+            val builder = base.newBuilder()
+            path.trim('/').split('/').filter { it.isNotEmpty() }.forEach(builder::addPathSegment)
+            return builder.build()
+        }
+
+        fun remoteUrl(baseUrl: String, path: String): HttpUrl =
+            remoteUrl(baseUrl.trimEnd('/').toHttpUrl(), path)
 
         /**
          * Timeouts are generous on write because a large video on a slow

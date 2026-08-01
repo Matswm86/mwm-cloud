@@ -14,6 +14,7 @@ coroutines = "1.9.0"
 datastore = "1.1.1"
 tink = "1.15.0"
 coil = "2.7.0"
+media3 = "1.5.1"
 junit = "4.13.2"
 androidxTestExt = "1.2.1"
 espresso = "3.6.1"
@@ -54,8 +55,19 @@ kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 tink-android = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink" }
 
-# Thumbnails
+# Thumbnails and full-size images in the in-app viewer.
+#
+# Coil 2, not Coil 3. Coil 3 moved the OkHttp integration into a separate
+# coil-network-okhttp artifact and a new fetcher-factory API; Coil 2's
+# ImageLoader.Builder.okHttpClient(...) does the same job with the app's own
+# authenticated client and one less dependency to keep in step.
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+
+# Video and audio playback straight off the box. ExoPlayer's HTTP data source
+# takes default request headers, which is how the Basic credential reaches every
+# range request it makes while seeking.
+media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
+media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExt" }

@@ -84,4 +84,61 @@
     <string name="verify_all_good">All %1$s files are on your storage, at the right size.</string>
     <string name="verify_problems">%1$s of %2$s confirmed. %3$d missing, %4$d the wrong size.</string>
     <string name="verify_button">Check now</string>
+
+    <!-- Files: everything on the storage box, seen from inside the app -->
+    <string name="files_title">Your files</string>
+    <string name="files_subtitle">Everything that is safely on your storage.</string>
+    <string name="files_loading">Fetching the list \u2026</string>
+    <string name="files_loading_month">fetching \u2026</string>
+    <string name="files_empty">Nothing is backed up here yet.</string>
+    <string name="files_error">Could not reach your storage.</string>
+    <string name="files_no_hits">No files with that name.</string>
+    <string name="files_search_hint">Search by file name</string>
+    <string name="files_section_picked">Chosen</string>
+    <string name="files_doc_hint">This kind of file opens in an app you already have on the phone.</string>
+    <string name="files_doc_open">Open the file</string>
+    <string name="files_doc_failed">Could not open the file. The phone may have no app that reads this kind.</string>
+
+    <!--
+      Month names for the headings in Files. The remote path holds a year and a
+      month and nothing else, so the name comes from here rather than from a date
+      the app invented.
+    -->
+    <string-array name="month_names">
+        <item>January</item>
+        <item>February</item>
+        <item>March</item>
+        <item>April</item>
+        <item>May</item>
+        <item>June</item>
+        <item>July</item>
+        <item>August</item>
+        <item>September</item>
+        <item>October</item>
+        <item>November</item>
+        <item>December</item>
+    </string-array>
+
+    <!-- Help -->
+    <string name="help_title">Where are my files?</string>
+    <string name="help_where_title">On your own storage</string>
+    <string name="help_where_body">Photos are in Bilder, music in Musikk, films in Video, and what you picked yourself in Valgt. Inside each one, files are filed by year and month.</string>
+    <string name="help_phone_title">Your phone is left alone</string>
+    <string name="help_phone_body">The app copies. It never deletes anything from the phone, whatever you do in here. If you want to free up space, you do that yourself, afterwards, once you have seen that the files are there.</string>
+    <string name="help_computer_title">From a computer</string>
+    <string name="help_computer_body">You can also reach the files from a computer at %1$s, with the same username and password you set up here. That is a fallback: everything you need day to day is under "Your files".</string>
+    <string name="help_computer_body_unknown">Once the connection is set up, you can also reach the files from a computer with the same username and password.</string>
+    <string name="help_wifi_title">Wifi only</string>
+    <string name="help_wifi_body">Backing up only runs when the phone is on wifi and has enough battery. Mobile data is never used.</string>
+    <string name="help_limits_title">What the app does not do yet</string>
+    <string name="help_limits_body">Files over 5 GB are skipped, and you are told which ones. The app never deletes anything on your storage either.</string>
+
+    <!-- Home: new buttons -->
+    <string name="home_see_files">See your files</string>
+    <string name="home_help">Where are my files?</string>
+
+    <!-- Verify: fix what is missing -->
+    <string name="verify_repair">Send what is missing again</string>
+    <string name="verify_repairing">Queueing \u2026</string>
+    <string name="verify_repaired">%1$s files are queued again. Backing up starts when the phone is on wifi.</string>
 </resources>

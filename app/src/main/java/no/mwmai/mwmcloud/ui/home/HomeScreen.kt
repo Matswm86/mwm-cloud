@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -56,7 +58,12 @@ import no.mwmai.mwmcloud.work.UploadWorker
  * green tick.
  */
 @Composable
-fun HomeScreen(onChangeFolders: () -> Unit, modifier: Modifier = Modifier) {
+fun HomeScreen(
+    onChangeFolders: () -> Unit,
+    onSeeFiles: () -> Unit,
+    onHelp: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -84,6 +91,11 @@ fun HomeScreen(onChangeFolders: () -> Unit, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxSize()
             .background(MwmColors.Background)
+            // Scrollable rather than pinned. With the status card, the count, the
+            // verify panel and four buttons, this screen is taller than a small
+            // phone, and a weighted spacer would push the last button off-screen
+            // instead of letting the user reach it.
+            .verticalScroll(rememberScrollState())
             .padding(MwmDimens.ScreenPadding),
     ) {
         Spacer(Modifier.height(24.dp))
@@ -155,7 +167,7 @@ fun HomeScreen(onChangeFolders: () -> Unit, modifier: Modifier = Modifier) {
         // trusting the app's own record of what it thinks it sent.
         VerifyPanel(running = running)
 
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(24.dp))
 
         if (!running) {
             PrimaryButton(
@@ -170,7 +182,15 @@ fun HomeScreen(onChangeFolders: () -> Unit, modifier: Modifier = Modifier) {
             Spacer(Modifier.height(12.dp))
         }
 
+        // Above "change what gets backed up", because seeing that the photos are
+        // really there is the question people actually have.
+        SecondaryButton(stringResource(R.string.home_see_files), onSeeFiles)
+        Spacer(Modifier.height(12.dp))
+
         SecondaryButton(stringResource(R.string.home_change_folders), onChangeFolders)
+        Spacer(Modifier.height(12.dp))
+
+        SecondaryButton(stringResource(R.string.home_help), onHelp)
         Spacer(Modifier.height(16.dp))
 
         Text(
@@ -199,6 +219,8 @@ private fun VerifyPanel(running: Boolean) {
     var expected by remember { mutableIntStateOf(0) }
     var result by remember { mutableStateOf<no.mwmai.mwmcloud.data.verify.VerifyResult?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
+    var repairing by remember { mutableStateOf(false) }
+    var repaired by remember { mutableStateOf<Int?>(null) }
 
     Card(
         shape = RoundedCornerShape(MwmDimens.CardRadius),
@@ -214,6 +236,11 @@ private fun VerifyPanel(running: Boolean) {
             )
 
             val body = when {
+                repairing -> stringResource(R.string.verify_repairing)
+                repaired != null -> stringResource(
+                    R.string.verify_repaired,
+                    formatCount(repaired!!),
+                )
                 busy && expected > 0 -> stringResource(
                     R.string.verify_checking_progress,
                     formatCount(checked),
@@ -240,6 +267,7 @@ private fun VerifyPanel(running: Boolean) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = when {
                     error != null -> MwmColors.Attention
+                    repaired != null -> MwmColors.Action
                     result?.allGood == true -> MwmColors.Safe
                     result != null -> MwmColors.Attention
                     else -> MwmColors.Muted
@@ -248,14 +276,47 @@ private fun VerifyPanel(running: Boolean) {
 
             // Name the first few that are wrong. A count alone tells the user
             // there is a problem but not which photo to worry about.
-            result?.let { r ->
-                (r.missing + r.wrongSize).take(3).forEach { path ->
-                    Text(
-                        "· ${path.substringAfterLast('/')}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MwmColors.Muted,
-                    )
+            if (repaired == null) {
+                result?.let { r ->
+                    (r.missing + r.wrongSize).take(3).forEach { path ->
+                        Text(
+                            "· ${path.substringAfterLast('/')}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MwmColors.Muted,
+                        )
+                    }
                 }
+            }
+
+            // Finding a gap and leaving it there is only half an answer. Dropping
+            // the ledger rows for the files the server does not have makes the
+            // next run treat them as never uploaded, which is exactly what they
+            // are: the ledger recorded intent, the server holds the truth.
+            val broken = result?.takeIf { !it.allGood }
+            if (broken != null && repaired == null) {
+                SecondaryButton(
+                    text = stringResource(R.string.verify_repair),
+                    enabled = !running && !busy && !repairing,
+                    onClick = {
+                        repairing = true
+                        scope.launch {
+                            try {
+                                val ledger = Graph.ledger(context)
+                                val paths = broken.missing + broken.wrongSize
+                                paths.forEach { ledger.forget(it) }
+                                UploadWorker.enqueue(
+                                    context,
+                                    Graph.settings(context).currentCategories(),
+                                )
+                                repaired = paths.size
+                            } catch (e: Exception) {
+                                error = context.getString(R.string.err_generic)
+                            } finally {
+                                repairing = false
+                            }
+                        }
+                    },
+                )
             }
 
             PrimaryButton(
@@ -264,7 +325,8 @@ private fun VerifyPanel(running: Boolean) {
                 busy = busy,
                 color = MwmColors.Safe,
                 onClick = {
-                    busy = true; error = null; result = null; checked = 0; expected = 0
+                    busy = true; error = null; result = null; repaired = null
+                    checked = 0; expected = 0
                     scope.launch {
                         try {
                             val creds = Graph.credentialStore(context).current()

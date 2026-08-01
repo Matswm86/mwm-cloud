@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Drawn on the same 24 dp grid as the rest of the set: 1.8 stroke, round caps and
+  joins. Filled rather than outlined, because at 22 dp inside a circle badge an
+  outlined triangle reads as a smudge.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+    <path
+        android:pathData="M7.5,5.4 L19.2,12 L7.5,18.6 Z"
+        android:fillColor="#14212B"
+        android:strokeColor="#14212B"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
