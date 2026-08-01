@@ -13,7 +13,7 @@ screen, not the app. See [Roadmap](#roadmap).
 
 ## Download
 
-**[Get the APK](https://github.com/Matswm86/mwm-cloud/releases/download/latest/mwm-cloud-6aa0d4a.apk)**
+**[Get the APK](https://github.com/Matswm86/mwm-cloud/releases/download/latest/mwm-cloud-a24ddf7.apk)**
 &nbsp;·&nbsp; [all builds](https://github.com/Matswm86/mwm-cloud/releases)
 
 Open the link on your phone, tap the file, and allow "install from this source" when
