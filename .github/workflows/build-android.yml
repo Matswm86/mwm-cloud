@@ -92,6 +92,43 @@ jobs:
           files: ${{ env.APK_NAME }}-*.apk
           fail_on_unmatched_files: true
 
+      # The APK filename carries the commit sha (cache-busting, above), so any link
+      # written into README.md by hand goes stale the moment the next build lands.
+      # This step rewrites it to the APK this run just uploaded and pushes with the
+      # skip-ci token, so the README link is always the newest build and the commit
+      # does not trigger another build.
+      #
+      # NOTE: GitHub honours that token ANYWHERE in a commit message, including the
+      # body. Do not quote it in an ordinary commit message describing this step, or
+      # that push silently builds nothing and the README is never bumped.
+      - name: Point README at the APK this build produced (main pushes)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          APK="${APK_NAME}-${GITHUB_SHA:0:7}.apk"
+          # Work off the current tip of main rather than this run's checkout, so a
+          # concurrent push loses the race loudly instead of silently reverting main.
+          git checkout -- . 2>/dev/null || true
+          git fetch --depth=1 origin main
+          git checkout -B _readme_bump FETCH_HEAD
+          python3 - "$APK" <<'EOF'
+          import re, sys
+          apk = sys.argv[1]
+          s = open('README.md', encoding='utf-8').read()
+          out = re.sub(r'mwm-cloud-[0-9a-f]{7,40}\.apk', apk, s)
+          open('README.md', 'w', encoding='utf-8').write(out)
+          print('README unchanged' if out == s else 'README -> ' + apk)
+          EOF
+          if git diff --quiet -- README.md; then
+            echo "README already points at ${APK}"; exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -qam "README: download link -> ${APK} [skip ci]"
+          # Losing the race just means the next build corrects it; never fail here.
+          git push origin _readme_bump:main \
+            || echo "push rejected (main moved) - the next build will correct the README"
+
       - name: Create tagged release (vX.Y.Z tags)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2

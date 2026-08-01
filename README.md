@@ -8,7 +8,20 @@ is roughly EUR 3.20/month for 1 TB with unlimited traffic and speaks open protoc
 (SFTP, WebDAV) instead of a proprietary client. Nothing in the app is tied to that
 vendor beyond one `Transport` implementation.
 
-**Status: early. Not yet usable.** See [Roadmap](#roadmap).
+**Status: early. Not yet usable.** The current build opens on a design-reference
+screen, not the app. See [Roadmap](#roadmap).
+
+## Download
+
+**[Get the APK](https://github.com/Matswm86/mwm-cloud/releases/download/latest/mwm-cloud-0000000.apk)**
+&nbsp;·&nbsp; [all builds](https://github.com/Matswm86/mwm-cloud/releases)
+
+Open the link on your phone, tap the file, and allow "install from this source" when
+it asks.
+
+The filename carries the build id on purpose, so your phone can never serve you a
+stale cached APK. If the link 404s, a newer build has landed: grab the newest
+`mwm-cloud-*.apk` from the releases page.
 
 ## Why this exists
 

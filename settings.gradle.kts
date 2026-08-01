@@ -16,8 +16,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // dav4jvm is published via JitPack.
-        maven("https://jitpack.io")
     }
 }
 

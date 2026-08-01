@@ -11,7 +11,7 @@ kotlinxSerialization = "1.7.3"
 work = "2.10.0"
 room = "2.6.1"
 okhttp = "4.12.0"
-dav4jvm = "2.2.1"
+coroutines = "1.9.0"
 datastore = "1.1.1"
 tink = "1.15.0"
 coil = "2.7.0"
@@ -43,10 +43,13 @@ androidx-room-runtime = { group = "androidx.room", name = "room-runtime", versio
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 
-# Transport. Raw OkHttp covers PUT/MKCOL; dav4jvm is here only for PROPFIND XML parsing.
+# Transport. Raw OkHttp only. A WebDAV library was considered and rejected: the app
+# needs PUT, MKCOL, DELETE and one PROPFIND, and the remote layout shards by
+# year/month so listings stay small enough to parse with the platform XML parser.
+# Not worth a JitPack-built dependency for that.
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
-dav4jvm = { group = "com.github.bitfireAT", name = "dav4jvm", version.ref = "dav4jvm" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
 # Credential store. NOT androidx.security:security-crypto — EncryptedSharedPreferences
 # is deprecated as of 1.1.0-alpha07 (keyset corruption, main-thread I/O).
