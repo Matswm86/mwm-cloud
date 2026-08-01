@@ -27,6 +27,17 @@ The filename carries the build id on purpose, so your phone can never serve you 
 stale cached APK. If the link 404s, a newer build has landed: grab the newest
 `mwm-cloud-*.apk` from the releases page.
 
+## What it looks like
+
+Screenshots of the running build on a real phone, backing up a real library.
+
+| What should be kept safe | Your own files, and the schedule | Backing up, and checking it |
+|---|---|---|
+| <img src="design/skjermbilder/01-hva-skal-tas-vare-paa.jpeg" alt="A card per category with a switch, real counts and sizes read from the phone, and a link into the per-file picker" width="240"> | <img src="design/skjermbilder/02-egne-filer-og-automatisk.jpeg" alt="Hand-picked files and folders, the automatic backup card, and the start button" width="240"> | <img src="design/skjermbilder/03-sikrer-og-sjekk.jpeg" alt="A backup in progress, the count of files backed up, and the panel that asks the server to confirm" width="240"> |
+
+Every number on these screens was read from the phone or the server. None of them
+are placeholders.
+
 ## Why this exists
 
 Off-the-shelf sync clients can already move files to a WebDAV server. They are built
@@ -177,8 +188,11 @@ Headings are Bricolage Grotesque 600/700, body is Figtree 400/500/600. Buttons a
 than preferences: the intended user is often someone in their seventies holding the
 phone at arm's length.
 
-Interface language is Norwegian first, English second. The Norwegian strings are the
-original and the English are the translation, not the other way round.
+Norwegian and English, and you can choose. The Norwegian strings are the original
+and the English are the translation, not the other way round, but Android alone
+only reaches the Norwegian ones when the entire phone is set to Norwegian. That
+left a Norwegian speaker with an English phone looking at an English app and no way
+out of it, so there is a language choice under "Where are my files?".
 
 ## Roadmap
 

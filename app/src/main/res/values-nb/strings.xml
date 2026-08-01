@@ -175,4 +175,7 @@
     <string name="schedule_wifi_note">Automatisk sikring går bare på trådløst nett, og bare når batteriet ikke er lavt. Mobildata blir aldri brukt.</string>
 
     <string name="folders_skip">Ikke nå, bare vis meg filene</string>
+
+    <string name="help_language_title">Språk</string>
+    <string name="help_language_system">Følg telefonen</string>
 </resources>

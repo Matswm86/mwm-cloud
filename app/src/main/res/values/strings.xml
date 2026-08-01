@@ -176,4 +176,7 @@
     <string name="schedule_wifi_note">Automatic backup runs on wifi only, and only when the battery is not low. Mobile data is never used.</string>
 
     <string name="folders_skip">Not now, just show me the files</string>
+
+    <string name="help_language_title">Language</string>
+    <string name="help_language_system">Follow the phone</string>
 </resources>

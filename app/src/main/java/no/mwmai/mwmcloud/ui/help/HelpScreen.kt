@@ -20,9 +20,13 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import no.mwmai.mwmcloud.Graph
 import no.mwmai.mwmcloud.R
 import no.mwmai.mwmcloud.ui.SecondaryButton
+import no.mwmai.mwmcloud.ui.theme.AppLanguage
 import no.mwmai.mwmcloud.ui.theme.MwmColors
 import no.mwmai.mwmcloud.ui.theme.MwmDimens
 
@@ -111,12 +116,80 @@ fun HelpScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 body = stringResource(R.string.help_limits_body),
             )
 
+            LanguageCard()
+
             Spacer(Modifier.height(4.dp))
         }
 
         Spacer(Modifier.height(12.dp))
         SecondaryButton(stringResource(R.string.back), onBack)
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+/**
+ * Language.
+ *
+ * Android reaches `values-nb` only when the whole phone is set to Norwegian, so a
+ * Norwegian speaker with an English phone had the translation sitting unused in
+ * the APK. The labels here are deliberately written in their own language rather
+ * than translated, so "Norsk" reads as Norsk to someone currently seeing English.
+ */
+@Composable
+private fun LanguageCard() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val current by Graph.settings(context).language.collectAsState(initial = AppLanguage.SYSTEM)
+
+    Card(
+        shape = RoundedCornerShape(MwmDimens.CardRadius),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(vertical = 8.dp)) {
+            Text(
+                stringResource(R.string.help_language_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = MwmColors.Text,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            )
+            AppLanguage.entries.forEach { option ->
+                val selected = option == current
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { scope.launch { Graph.settings(context).setLanguage(option) } }
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Box(
+                        Modifier.size(26.dp).clip(CircleShape)
+                            .background(if (selected) MwmColors.Safe else MwmColors.Border),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (selected) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_check),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+                    Text(
+                        text = when (option) {
+                            AppLanguage.SYSTEM -> stringResource(R.string.help_language_system)
+                            AppLanguage.NORSK -> "Norsk"
+                            AppLanguage.ENGLISH -> "English"
+                        },
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MwmColors.Text,
+                    )
+                }
+            }
+        }
     }
 }
 

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import no.mwmai.mwmcloud.data.media.CategoryMode
 import no.mwmai.mwmcloud.data.media.MediaCategory
+import no.mwmai.mwmcloud.ui.theme.AppLanguage
 
 private val Context.settingsDataStore by preferencesDataStore(name = "mwmcloud_settings")
 
@@ -118,6 +119,22 @@ class AppSettings(private val context: Context) {
         context.settingsDataStore.edit { it[includedKey(category)] = uris }
     }
 
+    /**
+     * Interface language.
+     *
+     * Android alone only reaches `values-nb` when the whole phone is Norwegian, so
+     * without this a Norwegian speaker with an English phone had the translation
+     * sitting in the APK and no way to see it.
+     */
+    val language: Flow<AppLanguage> =
+        context.settingsDataStore.data.map { AppLanguage.parse(it[KEY_LANGUAGE]) }
+
+    suspend fun currentLanguage(): AppLanguage = language.first()
+
+    suspend fun setLanguage(value: AppLanguage) {
+        context.settingsDataStore.edit { it[KEY_LANGUAGE] = value.name }
+    }
+
     // ---- automatic backup -------------------------------------------------
 
     /** How often the app backs up on its own. */
@@ -187,6 +204,7 @@ class AppSettings(private val context: Context) {
         val KEY_SCHEDULE = stringPreferencesKey("backup_schedule")
         val KEY_AUTO_CATEGORIES = stringSetPreferencesKey("auto_categories")
         val KEY_AUTO_PICKED = booleanPreferencesKey("auto_include_picked")
+        val KEY_LANGUAGE = stringPreferencesKey("language")
 
         fun modeKey(c: MediaCategory): Preferences.Key<String> =
             stringPreferencesKey("mode_${c.name}")

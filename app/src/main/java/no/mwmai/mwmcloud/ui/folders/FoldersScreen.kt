@@ -482,11 +482,13 @@ private fun labelForSchedule(s: BackupSchedule) = when (s) {
     BackupSchedule.MONTHLY -> R.string.schedule_monthly
 }
 
+// One icon per kind. They were all the same folder glyph, which made three
+// identical-looking cards the user had to read to tell apart.
 private fun iconFor(c: MediaCategory) = when (c) {
-    MediaCategory.IMAGES -> R.drawable.ic_folder
-    MediaCategory.AUDIO -> R.drawable.ic_folder
-    MediaCategory.VIDEO -> R.drawable.ic_folder
-    MediaCategory.DOCUMENTS -> R.drawable.ic_folder
+    MediaCategory.IMAGES -> R.drawable.ic_image
+    MediaCategory.AUDIO -> R.drawable.ic_note
+    MediaCategory.VIDEO -> R.drawable.ic_play
+    MediaCategory.DOCUMENTS -> R.drawable.ic_document
 }
 
 private fun labelFor(c: MediaCategory) = when (c) {
