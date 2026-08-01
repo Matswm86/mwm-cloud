@@ -35,7 +35,18 @@ class WebDavTransport(
 ) : Transport {
 
     private val base: HttpUrl = baseUrl.trimEnd('/').toHttpUrl()
-    private val credential = Credentials.basic(username, password)
+
+    /**
+     * UTF-8, explicitly. OkHttp's [Credentials.basic] defaults to ISO-8859-1 per
+     * the older RFC 2617 reading, and a Storage Box rejects that: a password
+     * containing `§` authenticates as UTF-8 (207) and fails as ISO-8859-1 (401).
+     * Verified against a live box on 2026-08-01.
+     *
+     * This is not an edge case here. Norwegian passwords routinely contain æ, ø
+     * and å, and the symptom would be an unexplained "wrong password" for exactly
+     * the users this app is for.
+     */
+    private val credential = Credentials.basic(username, password, Charsets.UTF_8)
 
     override suspend fun testConnection() = io {
         // Depth 0 asks only about the root itself: cheapest call that still

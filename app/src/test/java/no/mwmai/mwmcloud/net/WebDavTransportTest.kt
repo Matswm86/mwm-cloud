@@ -40,6 +40,22 @@ class WebDavTransportTest {
     }
 
     @Test
+    fun `credentials are encoded as UTF-8, not ISO-8859-1`() = runBlocking {
+        // Regression guard. OkHttp's Credentials.basic defaults to ISO-8859-1, and
+        // a real Storage Box answers 401 to that but 207 to the UTF-8 form. Any
+        // Norwegian password with æ, ø or å would have failed as "wrong password".
+        val password = "hemmelig-æøå-§"
+        val t = WebDavTransport(server.url("/").toString().trimEnd('/'), "u000000", password)
+        server.enqueue(MockResponse().setResponseCode(207).setBody(EMPTY_MULTISTATUS))
+
+        t.testConnection()
+
+        val header = server.takeRequest().getHeader("Authorization")!!.removePrefix("Basic ")
+        val decoded = String(java.util.Base64.getDecoder().decode(header), Charsets.UTF_8)
+        assertEquals("u000000:$password", decoded)
+    }
+
+    @Test
     fun `testConnection asks for Depth 0, not a full listing`() = runBlocking {
         server.enqueue(MockResponse().setResponseCode(207).setBody(EMPTY_MULTISTATUS))
 

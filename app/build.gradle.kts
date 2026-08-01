@@ -58,6 +58,30 @@ android {
         compose = true
         buildConfig = true
     }
+
+    testOptions {
+        unitTests.all {
+            // Gradle prints nothing on success, which makes a green CI log
+            // indistinguishable from one where no test ran at all.
+            it.testLogging {
+                events("passed", "skipped", "failed")
+            }
+            it.afterSuite(
+                KotlinClosure2<org.gradle.api.tasks.testing.TestDescriptor, org.gradle.api.tasks.testing.TestResult, Unit>(
+                    { desc, result ->
+                        if (desc.parent == null) {
+                            println(
+                                "TEST SUMMARY: ${result.testCount} tests, " +
+                                    "${result.successfulTestCount} passed, " +
+                                    "${result.failedTestCount} failed, " +
+                                    "${result.skippedTestCount} skipped",
+                            )
+                        }
+                    },
+                ),
+            )
+        }
+    }
 }
 
 dependencies {
