@@ -27,6 +27,18 @@ The filename carries the build id on purpose, so your phone can never serve you 
 stale cached APK. If the link 404s, a newer build has landed: grab the newest
 `mwm-cloud-*.apk` from the releases page.
 
+## What it looks like
+
+| Choosing what goes | Getting it back |
+|---|---|
+| <img src="design/skjermer/03-velg-mapper.png" alt="What should be kept safe: a card per category with a switch, counts and sizes read from the phone" width="300"> | <img src="design/skjermer/06-filer.png" alt="Files: search, category chips, and a photo grid grouped by month" width="300"> |
+
+These come from the design pack, not from the current build, and the build has
+moved past them: the first screen also carries a card for hand-picked files, an
+automatic-backup card, a per-category entry into the thumbnail picker, and a way to
+skip straight to viewing. The colours, the 68 dp buttons and the 15 sp floor are
+what shipped.
+
 ## Why this exists
 
 Off-the-shelf sync clients can already move files to a WebDAV server. They are built
