@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  English strings. Norwegian (values-nb) is the authored original; this file is the
+  translation. Keep both in sync, and keep the plain-language rule in both: say
+  "backed up", never "synced"; say "safe", never "OK".
+-->
+<resources>
+    <string name="app_name">MWM Cloud</string>
+
+    <!-- Welcome -->
+    <string name="welcome_headline">Your photos are looked after.</string>
+    <string name="welcome_body">The app copies photos, music and documents somewhere safe. You do not need to do anything afterwards.</string>
+    <string name="welcome_start">Get started</string>
+    <string name="welcome_have_code">I have a code</string>
+    <string name="welcome_no_card">No card. No subscription.</string>
+</resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Platform theme. Compose owns the real styling; this exists so the window
+  background matches the design's Bakgrunn colour and the app does not flash
+  white on cold start.
+-->
+<resources>
+    <style name="Theme.MwmCloud" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

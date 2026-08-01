@@ -1,0 +1,25 @@
+# Secrets and per-machine config. local.properties carries both the SDK path and
+# the backend URL, so it must never be committed.
+local.properties
+*.env
+.env
+*.keystore
+*.jks
+
+# Android / Gradle
+.gradle/
+build/
+app/build/
+*.apk
+*.aab
+captures/
+.cxx/
+
+# IDE / OS
+.idea/
+*.iml
+.DS_Store
+
+# Python (tooling scripts)
+__pycache__/
+*.pyc

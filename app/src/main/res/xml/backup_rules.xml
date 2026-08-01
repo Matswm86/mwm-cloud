@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 11 and below. The credential store never leaves the device: the
+  Storage Box password is bound to the Android Keystore and would be useless
+  restored elsewhere, but shipping it off-device at all is not acceptable.
+-->
+<full-backup-content>
+    <exclude domain="file" path="datastore/" />
+    <exclude domain="sharedpref" path="mwmcloud_creds.xml" />
+</full-backup-content>

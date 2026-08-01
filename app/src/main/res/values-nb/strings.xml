@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Norsk bokmål. Dette er originalen — engelsk er oversettelsen.
+  Regel: skriv «sikret», ikke «synkronisert». Skriv «trygt», ikke «OK».
+  Ingen engelske låneord der et norsk ord finnes.
+-->
+<resources>
+    <string name="app_name">MWM Cloud</string>
+
+    <!-- Velkommen -->
+    <string name="welcome_headline">Bildene dine blir tatt vare på.</string>
+    <string name="welcome_body">Appen kopierer bilder, musikk og dokumenter til en trygg plass. Du trenger ikke gjøre noe etterpå.</string>
+    <string name="welcome_start">Kom i gang</string>
+    <string name="welcome_have_code">Jeg har en kode</string>
+    <string name="welcome_no_card">Ingen kort. Ingen abonnement.</string>
+</resources>

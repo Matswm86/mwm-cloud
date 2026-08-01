@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  XML mirror of the design tokens in ui/theme/Theme.kt. Only the handful the
+  platform needs before Compose starts. Keep the two in sync.
+-->
+<resources>
+    <color name="background">#FBF8F3</color>
+    <color name="action">#1F6FC4</color>
+    <color name="ic_launcher_background">#1F6FC4</color>
+</resources>
