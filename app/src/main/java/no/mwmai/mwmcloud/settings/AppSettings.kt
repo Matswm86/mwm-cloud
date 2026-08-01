@@ -44,14 +44,7 @@ class AppSettings(private val context: Context) {
         val KEY_CATEGORIES = stringSetPreferencesKey("categories")
         val KEY_SETUP = booleanPreferencesKey("setup_complete")
 
-        /**
-         * Video is off by default. It is usually the largest category by far, and
-         * silently starting a 54 GB upload is not a good first impression.
-         */
-        val DEFAULT_CATEGORIES = setOf(
-            MediaCategory.IMAGES,
-            MediaCategory.AUDIO,
-            MediaCategory.DOCUMENTS,
-        )
+        /** Everything on by default. Anything left out is something not backed up. */
+        val DEFAULT_CATEGORIES = MediaCategory.entries.toSet()
     }
 }

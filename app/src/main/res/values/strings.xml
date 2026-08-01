@@ -34,6 +34,7 @@
     <string name="folders_subtitle">You can change this at any time.</string>
     <string name="folders_counting">Counting…</string>
     <string name="folders_empty">Nothing found</string>
+    <string name="folders_too_large">%1$d are too large to back up yet (over %2$s)</string>
     <string name="folders_start">Start backing up</string>
     <string name="folders_selected">%1$d of %2$d chosen · about %3$s</string>
 

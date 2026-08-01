@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import no.mwmai.mwmcloud.Graph
 import no.mwmai.mwmcloud.R
+import no.mwmai.mwmcloud.data.media.BackupLimits
 import no.mwmai.mwmcloud.data.media.CategorySummary
 import no.mwmai.mwmcloud.data.media.MediaCategory
 import no.mwmai.mwmcloud.ui.PrimaryButton
@@ -203,6 +204,19 @@ private fun CategoryCard(
                     style = MaterialTheme.typography.labelMedium,
                     color = MwmColors.Muted,
                 )
+
+                // Never let oversized files disappear without saying so.
+                if (!scanning && (summary?.skippedTooLarge ?: 0) > 0) {
+                    Text(
+                        text = stringResource(
+                            R.string.folders_too_large,
+                            summary!!.skippedTooLarge,
+                            formatBytes(BackupLimits.MAX_FILE_BYTES),
+                        ),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MwmColors.Attention,
+                    )
+                }
             }
 
             Switch(

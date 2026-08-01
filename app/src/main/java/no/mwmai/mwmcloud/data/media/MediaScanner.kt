@@ -60,11 +60,30 @@ data class LocalFile(
     val dedupeKey: String get() = "$remotePath|$size|$modified"
 }
 
+/** Limits that apply to every category. One place, so nothing drifts. */
+object BackupLimits {
+    /**
+     * Files above this are skipped for now.
+     *
+     * WebDAV PUT cannot resume, so a 20 GB video that drops at 90% restarts from
+     * zero and will realistically never finish on a home connection. Skipping it
+     * loudly is honest; retrying it forever is not. Raising this only makes sense
+     * once the transport can resume, which means SFTP.
+     */
+    const val MAX_FILE_BYTES: Long = 5L * 1024 * 1024 * 1024
+}
+
 /** Aggregate shown on the folder-picker cards: "8 412 bilder · 38 GB". */
 data class CategorySummary(
     val category: MediaCategory,
     val fileCount: Int,
     val totalBytes: Long,
+    /**
+     * Files above [BackupLimits.MAX_FILE_BYTES]. Surfaced in the UI rather than
+     * dropped quietly: a backup that silently omits your biggest videos is worse
+     * than one that admits it cannot take them yet.
+     */
+    val skippedTooLarge: Int = 0,
 )
 
 /**
@@ -78,17 +97,24 @@ class MediaScanner(private val context: Context) {
     suspend fun summarise(category: MediaCategory): CategorySummary = withContext(Dispatchers.IO) {
         var count = 0
         var bytes = 0L
+        var oversized = 0
         query(category) { _, _, size, _ ->
-            count++
-            bytes += size
+            if (size > BackupLimits.MAX_FILE_BYTES) {
+                oversized++
+            } else {
+                count++
+                bytes += size
+            }
         }
-        CategorySummary(category, count, bytes)
+        CategorySummary(category, count, bytes, oversized)
     }
 
     suspend fun scan(category: MediaCategory): List<LocalFile> = withContext(Dispatchers.IO) {
         buildList {
             query(category) { uri, name, size, modified ->
-                add(LocalFile(uri, name, size, modified, category))
+                if (size <= BackupLimits.MAX_FILE_BYTES) {
+                    add(LocalFile(uri, name, size, modified, category))
+                }
             }
         }
     }
