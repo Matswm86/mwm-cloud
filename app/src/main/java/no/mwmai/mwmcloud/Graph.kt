@@ -3,6 +3,7 @@ package no.mwmai.mwmcloud
 import android.content.Context
 import no.mwmai.mwmcloud.data.ledger.UploadLedger
 import no.mwmai.mwmcloud.data.media.MediaScanner
+import no.mwmai.mwmcloud.data.media.SafScanner
 import no.mwmai.mwmcloud.net.Transport
 import no.mwmai.mwmcloud.net.WebDavTransport
 import no.mwmai.mwmcloud.settings.AppSettings
@@ -19,6 +20,7 @@ object Graph {
     @Volatile private var credentialStore: CredentialStore? = null
     @Volatile private var settings: AppSettings? = null
     @Volatile private var scanner: MediaScanner? = null
+    @Volatile private var saf: SafScanner? = null
 
     fun ledger(context: Context): UploadLedger =
         ledger ?: synchronized(this) {
@@ -38,6 +40,11 @@ object Graph {
     fun mediaScanner(context: Context): MediaScanner =
         scanner ?: synchronized(this) {
             scanner ?: MediaScanner(context.applicationContext).also { scanner = it }
+        }
+
+    fun safScanner(context: Context): SafScanner =
+        saf ?: synchronized(this) {
+            saf ?: SafScanner(context.applicationContext).also { saf = it }
         }
 
     /** Not cached: credentials can change, and a stale transport would keep using the old ones. */

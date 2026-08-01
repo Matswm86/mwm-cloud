@@ -39,13 +39,21 @@ data class LocalFile(
     /** Epoch millis. */
     val modified: Long,
     val category: MediaCategory,
+    /**
+     * Set for hand-picked files and folders, which mirror the structure the user
+     * chose rather than being filed by date. Null means the date-sharded layout.
+     */
+    val explicitRemoteDir: String? = null,
 ) {
     /**
-     * Where this lands on the box. Sharded by year and month so no single remote
-     * collection grows into the thousands, which keeps listing cheap.
+     * Where this lands on the box. Media is sharded by year and month so no
+     * single remote collection grows into the thousands, which keeps listing
+     * cheap. Hand-picked files keep the shape the user picked, because that is
+     * the shape they will look for when they want them back.
      */
     val remotePath: String
         get() {
+            explicitRemoteDir?.let { return "$it/$displayName" }
             val cal = java.util.Calendar.getInstance().apply { timeInMillis = modified }
             val year = cal.get(java.util.Calendar.YEAR)
             val month = String.format(Locale.US, "%02d", cal.get(java.util.Calendar.MONTH) + 1)

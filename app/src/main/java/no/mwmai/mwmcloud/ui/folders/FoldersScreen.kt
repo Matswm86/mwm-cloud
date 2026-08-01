@@ -86,8 +86,58 @@ fun FoldersScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
         }
     }
 
+    // Hand-picked files and folders, so nothing is limited to MediaStore's fixed
+    // categories. This is how documents, downloads and anything else get in.
+    var pickedSummary by remember { mutableStateOf<CategorySummary?>(null) }
+
+    suspend fun refreshPicked() {
+        val s = Graph.settings(context)
+        pickedSummary = Graph.safScanner(context)
+            .summarise(s.currentPickedFolders(), s.currentPickedFiles())
+    }
+
+    val folderPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        if (uri != null) {
+            // Persist the grant, or the folder stops working after a reboot.
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            }
+            scope.launch {
+                Graph.settings(context).addPickedFolders(setOf(uri.toString()))
+                refreshPicked()
+            }
+        }
+    }
+
+    val filePicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenMultipleDocuments(),
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            uris.forEach { uri ->
+                runCatching {
+                    context.contentResolver.takePersistableUriPermission(
+                        uri,
+                        android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                    )
+                }
+            }
+            scope.launch {
+                Graph.settings(context).addPickedFiles(uris.map { it.toString() }.toSet())
+                refreshPicked()
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) { refreshPicked() }
+
     val chosen = MediaCategory.entries.filter { selected[it] == true }.toSet()
-    val chosenBytes = chosen.sumOf { summaries[it]?.totalBytes ?: 0L }
+    val chosenBytes = chosen.sumOf { summaries[it]?.totalBytes ?: 0L } +
+        (pickedSummary?.totalBytes ?: 0L)
 
     Column(
         modifier = modifier
@@ -109,7 +159,8 @@ fun FoldersScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(24.dp))
 
-        MediaCategory.entries.forEach { category ->
+        // Documents has no MediaStore category; it is covered by the picker below.
+        MediaCategory.entries.filter { it != MediaCategory.DOCUMENTS }.forEach { category ->
             CategoryCard(
                 category = category,
                 summary = summaries[category],
@@ -120,6 +171,14 @@ fun FoldersScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
             Spacer(Modifier.height(MwmDimens.CardSpacing))
         }
 
+        PickedCard(
+            summary = pickedSummary,
+            onPickFolder = { folderPicker.launch(null) },
+            onPickFiles = { filePicker.launch(arrayOf("*/*")) },
+            onClear = { scope.launch { Graph.settings(context).clearPicked(); refreshPicked() } },
+        )
+
+        Spacer(Modifier.height(MwmDimens.CardSpacing))
         Spacer(Modifier.weight(1f))
 
         Text(
@@ -137,7 +196,7 @@ fun FoldersScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
 
         PrimaryButton(
             text = stringResource(R.string.folders_start),
-            enabled = chosen.isNotEmpty() && !scanning,
+            enabled = (chosen.isNotEmpty() || (pickedSummary?.fileCount ?: 0) > 0) && !scanning,
             onClick = {
                 scope.launch {
                     Graph.settings(context).setCategories(chosen)
@@ -147,6 +206,68 @@ fun FoldersScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
             },
         )
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+/** Hand-picked files and folders. The way in for anything MediaStore cannot see. */
+@Composable
+private fun PickedCard(
+    summary: CategorySummary?,
+    onPickFolder: () -> Unit,
+    onPickFiles: () -> Unit,
+    onClear: () -> Unit,
+) {
+    Card(
+        shape = RoundedCornerShape(MwmDimens.CardRadius),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                stringResource(R.string.picked_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = MwmColors.Text,
+            )
+            Text(
+                text = if ((summary?.fileCount ?: 0) == 0) {
+                    stringResource(R.string.picked_none)
+                } else {
+                    stringResource(
+                        R.string.picked_count,
+                        formatCount(summary!!.fileCount),
+                        formatBytes(summary.totalBytes),
+                    )
+                },
+                style = MaterialTheme.typography.labelMedium,
+                color = MwmColors.Muted,
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                SmallAction(stringResource(R.string.picked_add_folder), onPickFolder, Modifier.weight(1f))
+                SmallAction(stringResource(R.string.picked_add_files), onPickFiles, Modifier.weight(1f))
+            }
+
+            if ((summary?.fileCount ?: 0) > 0) {
+                SmallAction(stringResource(R.string.picked_clear), onClear, Modifier.fillMaxWidth())
+            }
+        }
+    }
+}
+
+@Composable
+private fun SmallAction(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    androidx.compose.material3.OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.height(56.dp),
+        shape = MaterialTheme.shapes.medium,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MwmColors.Border),
+        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+            containerColor = Color.White,
+            contentColor = MwmColors.Action,
+        ),
+    ) {
+        Text(text, style = MaterialTheme.typography.labelMedium)
     }
 }
 

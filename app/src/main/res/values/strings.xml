@@ -66,4 +66,11 @@
     <string name="notif_channel_backup">Backup</string>
     <string name="notif_backing_up">Backing up your files</string>
     <string name="notif_progress">%1$d of %2$d done</string>
+    <string name="picked_title">Your own files and folders</string>
+    <string name="picked_none">Nothing chosen yet</string>
+    <string name="picked_count">%1$s files · %2$s</string>
+    <string name="picked_add_folder">Choose folder</string>
+    <string name="picked_add_files">Choose files</string>
+    <string name="picked_clear">Remove all chosen</string>
+    <string name="err_nothing_selected">Nothing is chosen yet.</string>
 </resources>

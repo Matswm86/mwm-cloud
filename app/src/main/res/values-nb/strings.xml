@@ -66,4 +66,11 @@
     <string name="notif_channel_backup">Sikring</string>
     <string name="notif_backing_up">Sikrer filene dine</string>
     <string name="notif_progress">%1$d av %2$d er ferdig</string>
+    <string name="picked_title">Egne filer og mapper</string>
+    <string name="picked_none">Ingenting valgt ennå</string>
+    <string name="picked_count">%1$s filer · %2$s</string>
+    <string name="picked_add_folder">Velg mappe</string>
+    <string name="picked_add_files">Velg filer</string>
+    <string name="picked_clear">Fjern alle valgte</string>
+    <string name="err_nothing_selected">Ingenting er valgt ennå.</string>
 </resources>

@@ -37,30 +37,57 @@ class UploadWorker(
     params: WorkerParameters,
 ) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): Result {
+    /**
+     * A backup job must never be able to kill the app. Anything unexpected is
+     * reported as a failed run with a message, not thrown into the process.
+     */
+    override suspend fun doWork(): Result = try {
+        upload()
+    } catch (e: Throwable) {
+        Result.failure(error(applicationContext.getString(R.string.err_generic)))
+    }
+
+    private suspend fun upload(): Result {
         val creds = Graph.credentialStore(applicationContext).current()
             ?: return Result.failure(error("Ingen tilkobling er satt opp."))
 
         val categories = inputData.getStringArray(KEY_CATEGORIES)
             ?.mapNotNull { runCatching { MediaCategory.valueOf(it) }.getOrNull() }
-            ?: return Result.failure(error("Ingen mapper er valgt."))
+            .orEmpty()
 
         val transport = Graph.transport(creds)
         val ledger = Graph.ledger(applicationContext)
         val scanner = Graph.mediaScanner(applicationContext)
+        val settings = Graph.settings(applicationContext)
 
         // One pass over the ledger beats one query per file when there are
         // thousands of them.
         val alreadyDone = ledger.uploadedKeys()
 
-        val pending = mutableListOf<LocalFile>()
+        val found = mutableListOf<LocalFile>()
         for (category in categories) {
-            pending += scanner.scan(category).filter { it.dedupeKey !in alreadyDone }
+            found += scanner.scan(category)
         }
+        // Hand-picked files and folders, which cover everything MediaStore's
+        // fixed categories cannot reach.
+        found += Graph.safScanner(applicationContext).scan(
+            treeUris = settings.currentPickedFolders(),
+            fileUris = settings.currentPickedFiles(),
+        )
+
+        if (found.isEmpty()) {
+            return Result.failure(error(applicationContext.getString(R.string.err_nothing_selected)))
+        }
+
+        // Distinct by remote path: a file can be reached both by category and by
+        // a picked folder, and uploading it twice would double the reported work.
+        val pending = found
+            .distinctBy { it.remotePath }
+            .filter { it.dedupeKey !in alreadyDone }
 
         if (pending.isEmpty()) return Result.success(progress(0, 0))
 
-        setForeground(foregroundInfo(0, pending.size))
+        showProgress(0, pending.size)
 
         var done = 0
         var failed = 0
@@ -100,7 +127,7 @@ class UploadWorker(
             }
 
             setProgress(progress(done, pending.size))
-            setForeground(foregroundInfo(done, pending.size))
+            showProgress(done, pending.size)
         }
 
         return when {
@@ -129,6 +156,20 @@ class UploadWorker(
         .putInt(KEY_DONE, done)
         .putInt(KEY_TOTAL, total)
         .build()
+
+    /**
+     * Promoting to a foreground service is best-effort. It legitimately fails
+     * when the worker has been stopped, when the user revoked notifications, or
+     * under OEM background restrictions. None of those are reasons to abandon an
+     * upload that is otherwise working, and none are reasons to crash.
+     */
+    private suspend fun showProgress(done: Int, total: Int) {
+        try {
+            setForeground(foregroundInfo(done, total))
+        } catch (_: Exception) {
+            // Upload continues without the notification.
+        }
+    }
 
     private fun foregroundInfo(done: Int, total: Int): ForegroundInfo {
         val ctx = applicationContext
