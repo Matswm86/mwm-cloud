@@ -63,7 +63,13 @@ Five consequences shape every decision here:
 - **Getting your files back never means leaving the app.** A storage box does serve
   a plain directory index in a browser, and that still works as a fallback, but it
   looks like an FTP listing and it asks the user to understand URLs. Photos, video
-  and music open inside MWM Cloud instead.
+  and music open inside MWM Cloud instead, and any one of them can be put back on
+  the phone with one button, or a whole month at a time.
+- **A file put back goes into the phone's own folders, not the app's.** Restored
+  photos land in `Pictures/MWM Cloud/2026/08/`, video in `Movies/`, music in
+  `Music/`, everything else in `Download/`. They appear in the gallery and they
+  survive uninstalling this app. A file that only exists inside the app that
+  fetched it has not really come back.
 - **"Everything" and "only these" are different requests, and stay different.** A
   category set to *everything* stores what you ticked off, so a photo taken
   tomorrow is covered without being asked about. A category set to *only what I
@@ -92,6 +98,9 @@ Five consequences shape every decision here:
                     Verifier  ─── PROPFIND, compare sizes ───> what is really there
                          │
                     Viewer    ─── GET with ranges ──────────> photos, film, music
+                         │
+                    Downloader ── GET ──> MediaStore ───────> Pictures/MWM Cloud/…
+                    (one file now, or a folder via WorkManager)
 ```
 
 Media is filed by year and month so no remote folder grows into the thousands and a
@@ -208,6 +217,7 @@ out of it, so there is a language choice under "Where are my files?".
 - [x] Per-category choice between "everything" and "only what I pick"
 - [x] Scheduled automatic backup, with its own list of what it covers
 - [x] Browse and play what is on the server without backing anything up first
+- [x] Put files back on the phone: one file, or a whole month in the background
 - [ ] First-run walkthrough with a visible confirmation at each step
 - [ ] S3-compatible transport, which also brings multipart upload
 - [ ] A provider picker over the WebDAV and S3 hosts that need no OAuth

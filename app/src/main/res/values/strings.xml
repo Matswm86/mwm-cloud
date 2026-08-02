@@ -66,6 +66,8 @@
     <string name="notif_channel_backup">Backup</string>
     <string name="notif_backing_up">Backing up your files</string>
     <string name="notif_progress">%1$d of %2$d done</string>
+    <string name="notif_channel_restore">Getting files back</string>
+    <string name="notif_restoring">Putting your files back on the phone</string>
     <string name="picked_title">Your own files and folders</string>
     <string name="picked_none">Nothing chosen yet</string>
     <string name="picked_count">%1$s files · %2$s</string>
@@ -98,6 +100,22 @@
     <string name="files_doc_hint">This kind of file opens in an app you already have on the phone.</string>
     <string name="files_doc_open">Open the file</string>
     <string name="files_doc_failed">Could not open the file. The phone may have no app that reads this kind.</string>
+
+    <!--
+      Getting files back. Say "on the phone", never "download": the whole point is
+      that the file comes home, not that a transfer happened.
+    -->
+    <string name="save_to_phone">Put back on the phone</string>
+    <string name="save_done">Saved on the phone, in the folder %1$s.</string>
+    <string name="save_already">This one is already on the phone.</string>
+    <string name="save_failed">Could not save the file. Is there room left on the phone?</string>
+    <string name="save_needs_permission">The app needs permission to write to the phone before it can put files back.</string>
+    <string name="files_save_all">Put all %1$s back on the phone</string>
+    <string name="files_save_started">They are being fetched now. You can close the app; it carries on.</string>
+    <string name="files_save_running">%1$s of %2$s put back…</string>
+    <string name="files_save_done">%1$s files are back on the phone.</string>
+    <string name="files_save_failed">Something went wrong while getting the files back.</string>
+    <string name="files_save_wifi">Only happens on wifi, so mobile data is never used.</string>
 
     <!--
       Month names for the headings in Files. The remote path holds a year and a

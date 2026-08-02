@@ -15,6 +15,15 @@
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
     <!--
+      Putting files back. From Android 10 the app owns what it inserts into
+      MediaStore and no permission is needed, so this is capped at API 28 where
+      writing to Pictures/Movies/Music still goes through the filesystem.
+    -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <!--
       Upload runs as a dataSync foreground service. On Android 15+ the system caps
       dataSync at 6 hours per 24 and forbids starting it from BOOT_COMPLETED, so the
       work is scheduled through WorkManager and split across runs rather than held

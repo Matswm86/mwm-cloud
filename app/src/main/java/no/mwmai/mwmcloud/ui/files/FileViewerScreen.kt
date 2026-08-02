@@ -1,7 +1,11 @@
 package no.mwmai.mwmcloud.ui.files
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.webkit.MimeTypeMap
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
@@ -44,6 +49,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import no.mwmai.mwmcloud.Graph
 import no.mwmai.mwmcloud.R
+import no.mwmai.mwmcloud.data.download.Downloader
+import no.mwmai.mwmcloud.data.download.SaveOutcome
 import no.mwmai.mwmcloud.data.remote.FileKind
 import no.mwmai.mwmcloud.data.remote.RemoteFile
 import no.mwmai.mwmcloud.settings.BoxCredentials
@@ -109,10 +116,100 @@ fun FileViewerScreen(
             }
         }
 
+        if (creds != null) {
+            Spacer(Modifier.height(12.dp))
+            SaveToPhone(file, creds)
+        }
+
         Spacer(Modifier.height(12.dp))
         SecondaryButton(stringResource(R.string.back), onBack)
         Spacer(Modifier.height(16.dp))
     }
+}
+
+/**
+ * Copies this one file back onto the phone, into the phone's own Pictures,
+ * Movies, Music or Download folder.
+ *
+ * Immediate rather than queued: the user is looking at the file, tapped a button,
+ * and needs to see it happen. Whole folders go through
+ * [no.mwmai.mwmcloud.work.DownloadWorker] instead, because those take minutes.
+ *
+ * The result line names the real folder the file landed in, not a friendly
+ * translation of it. Someone who wants to find the photo afterwards has to be
+ * able to type that name into a file manager and have it match.
+ */
+@Composable
+private fun SaveToPhone(file: RemoteFile, creds: BoxCredentials) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val downloader = remember(context) { Downloader(context) }
+
+    var busy by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf<String?>(null) }
+    var failed by remember { mutableStateOf(false) }
+
+    fun save() {
+        busy = true
+        message = null
+        failed = false
+        scope.launch {
+            try {
+                message = when (downloader.save(Graph.transport(creds), file)) {
+                    is SaveOutcome.AlreadyThere -> context.getString(R.string.save_already)
+                    is SaveOutcome.Saved -> context.getString(
+                        R.string.save_done,
+                        Downloader.relativeDirFor(file.kind, file.path).trimEnd('/'),
+                    )
+                }
+            } catch (e: Exception) {
+                // Covers a dropped connection, a full phone and a filename the
+                // filesystem refuses. The user cannot act on which, only on that
+                // it did not work.
+                message = context.getString(R.string.save_failed)
+                failed = true
+            } finally {
+                busy = false
+            }
+        }
+    }
+
+    val askPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            save()
+        } else {
+            message = context.getString(R.string.save_needs_permission)
+            failed = true
+        }
+    }
+
+    message?.let {
+        Text(
+            it,
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (failed) MwmColors.Attention else MwmColors.Safe,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(Modifier.height(8.dp))
+    }
+
+    PrimaryButton(
+        text = stringResource(R.string.save_to_phone),
+        busy = busy,
+        onClick = {
+            // Android 9 and older need the old write permission; Android 10 and
+            // newer need nothing, because the app owns what it inserts.
+            val needed = downloader.needsWritePermission() &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                ) != PackageManager.PERMISSION_GRANTED
+            if (needed) askPermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE) else save()
+        },
+    )
 }
 
 @Composable

@@ -1,5 +1,9 @@
 package no.mwmai.mwmcloud.ui.files
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -46,10 +50,15 @@ import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.core.content.ContextCompat
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import no.mwmai.mwmcloud.Graph
 import no.mwmai.mwmcloud.R
+import no.mwmai.mwmcloud.data.download.Downloader
 import no.mwmai.mwmcloud.data.remote.FileKind
 import no.mwmai.mwmcloud.data.remote.RemoteFile
 import no.mwmai.mwmcloud.data.remote.RemoteGroup
@@ -61,6 +70,7 @@ import no.mwmai.mwmcloud.ui.formatBytes
 import no.mwmai.mwmcloud.ui.formatCount
 import no.mwmai.mwmcloud.ui.theme.MwmColors
 import no.mwmai.mwmcloud.ui.theme.MwmDimens
+import no.mwmai.mwmcloud.work.DownloadWorker
 
 /**
  * Screen 06, `Filer`. Everything that is on the box, seen from inside the app.
@@ -124,6 +134,62 @@ fun FilesScreen(
         }
     }
 
+    // Putting a whole month back is minutes of work, so it runs in a worker and
+    // the screen can be left. This line is the only place that run is visible.
+    val restoreInfos by WorkManager.getInstance(context)
+        .getWorkInfosForUniqueWorkLiveData(DownloadWorker.WORK_NAME)
+        .observeAsState(emptyList())
+    val restore = restoreInfos.firstOrNull { !it.state.isFinished } ?: restoreInfos.lastOrNull()
+
+    val restoreText: String? = when {
+        restore == null -> null
+        !restore.state.isFinished -> {
+            val d = restore.progress.getInt(DownloadWorker.KEY_DONE, 0)
+            val t = restore.progress.getInt(DownloadWorker.KEY_TOTAL, 0)
+            if (t > 0) {
+                stringResource(R.string.files_save_running, formatCount(d), formatCount(t))
+            } else {
+                stringResource(R.string.files_save_started)
+            }
+        }
+        restore.state == WorkInfo.State.SUCCEEDED -> stringResource(
+            R.string.files_save_done,
+            formatCount(restore.outputData.getInt(DownloadWorker.KEY_DONE, 0)),
+        )
+        else -> restore.outputData.getString(DownloadWorker.KEY_ERROR)
+            ?: stringResource(R.string.files_save_failed)
+    }
+    val restoreFailed = restore != null &&
+        restore.state.isFinished &&
+        restore.state != WorkInfo.State.SUCCEEDED
+
+    val downloader = remember(context) { Downloader(context) }
+    var pendingFolder by remember { mutableStateOf<String?>(null) }
+
+    val askPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        val folder = pendingFolder
+        pendingFolder = null
+        if (granted && folder != null) DownloadWorker.enqueue(context, folder)
+    }
+
+    fun saveAll(folder: String) {
+        // Android 9 and older need the old write permission. Android 10 and newer
+        // need none, because the app owns what it puts into MediaStore.
+        val needed = downloader.needsWritePermission() &&
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            ) != PackageManager.PERMISSION_GRANTED
+        if (needed) {
+            pendingFolder = folder
+            askPermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        } else {
+            DownloadWorker.enqueue(context, folder)
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -142,6 +208,15 @@ fun FilesScreen(
             style = MaterialTheme.typography.labelMedium,
             color = MwmColors.Muted,
         )
+
+        restoreText?.let {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (restoreFailed) MwmColors.Attention else MwmColors.Safe,
+            )
+        }
 
         Spacer(Modifier.height(14.dp))
         SearchField(query, onChange = { query = it })
@@ -169,6 +244,7 @@ fun FilesScreen(
                         }
                     },
                     onOpen = onOpen,
+                    onSaveAll = { folder -> saveAll(folder) },
                 )
             }
         }
@@ -188,6 +264,7 @@ private fun FileGrid(
     creds: BoxCredentials?,
     onNeedFiles: suspend (String) -> Unit,
     onOpen: (RemoteFile) -> Unit,
+    onSaveAll: (String) -> Unit,
 ) {
     // Photos tile well at three across; a film or a song is a name you have to be
     // able to read, so those get fewer, wider cells.
@@ -233,6 +310,7 @@ private fun FileGrid(
                 GroupHeading(
                     title = group.headingText(monthNames),
                     count = filesByGroup[group.path]?.size,
+                    onSaveAll = { onSaveAll(group.path) },
                 )
             }
             fileItems(filesByGroup[group.path].orEmpty(), columns, creds, onOpen)
@@ -359,21 +437,44 @@ private fun FileRow(file: RemoteFile, onOpen: (RemoteFile) -> Unit) {
     }
 }
 
+/**
+ * A month or folder heading, with the one action that belongs to the whole group:
+ * put all of it back on the phone.
+ *
+ * The button only appears once the month's files have been listed. Offering to
+ * restore a folder before knowing whether it holds three files or nine hundred
+ * would be asking the user to agree to something neither of us can see yet.
+ */
 @Composable
-private fun GroupHeading(title: String, count: Int?) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(title, style = MaterialTheme.typography.titleLarge, color = MwmColors.Text)
-        Text(
-            text = count?.let { formatCount(it) }
-                ?: stringResource(R.string.files_loading_month),
-            style = MaterialTheme.typography.labelMedium,
-            color = MwmColors.Muted,
-            modifier = Modifier.padding(bottom = 3.dp),
-        )
+private fun GroupHeading(title: String, count: Int?, onSaveAll: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 4.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(title, style = MaterialTheme.typography.titleLarge, color = MwmColors.Text)
+            Text(
+                text = count?.let { formatCount(it) }
+                    ?: stringResource(R.string.files_loading_month),
+                style = MaterialTheme.typography.labelMedium,
+                color = MwmColors.Muted,
+                modifier = Modifier.padding(bottom = 3.dp),
+            )
+        }
+        if (count != null && count > 0) {
+            Spacer(Modifier.height(8.dp))
+            SecondaryButton(
+                text = stringResource(R.string.files_save_all, formatCount(count)),
+                onClick = onSaveAll,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                stringResource(R.string.files_save_wifi),
+                style = MaterialTheme.typography.labelMedium,
+                color = MwmColors.Muted,
+            )
+        }
     }
 }
 

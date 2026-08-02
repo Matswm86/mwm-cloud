@@ -66,6 +66,8 @@
     <string name="notif_channel_backup">Sikring</string>
     <string name="notif_backing_up">Sikrer filene dine</string>
     <string name="notif_progress">%1$d av %2$d er ferdig</string>
+    <string name="notif_channel_restore">Henting</string>
+    <string name="notif_restoring">Legger filene tilbake på telefonen</string>
     <string name="picked_title">Egne filer og mapper</string>
     <string name="picked_none">Ingenting valgt ennå</string>
     <string name="picked_count">%1$s filer · %2$s</string>
@@ -98,6 +100,22 @@
     <string name="files_doc_hint">Denne filtypen åpnes i en app du allerede har på telefonen.</string>
     <string name="files_doc_open">Åpne filen</string>
     <string name="files_doc_failed">Fikk ikke åpnet filen. Telefonen har kanskje ingen app som leser denne typen.</string>
+
+    <!--
+      Å hente filer tilbake. Skriv «på telefonen», aldri «last ned»: poenget er at
+      filen kommer hjem, ikke at det skjedde en overføring.
+    -->
+    <string name="save_to_phone">Legg tilbake på telefonen</string>
+    <string name="save_done">Lagret på telefonen, i mappen %1$s.</string>
+    <string name="save_already">Denne ligger allerede på telefonen.</string>
+    <string name="save_failed">Fikk ikke lagret filen. Er det plass igjen på telefonen?</string>
+    <string name="save_needs_permission">Appen trenger lov til å skrive til telefonen før den kan legge filer tilbake.</string>
+    <string name="files_save_all">Legg alle %1$s tilbake på telefonen</string>
+    <string name="files_save_started">Filene hentes nå. Du kan lukke appen, den fortsetter.</string>
+    <string name="files_save_running">%1$s av %2$s lagt tilbake …</string>
+    <string name="files_save_done">%1$s filer ligger på telefonen igjen.</string>
+    <string name="files_save_failed">Noe gikk galt under hentingen.</string>
+    <string name="files_save_wifi">Skjer bare på trådløst nett, så mobildata blir ikke brukt.</string>
 
     <!--
       Månedsnavn til overskriftene i Filer. Stien på lagringsplassen inneholder
