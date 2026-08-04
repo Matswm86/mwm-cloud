@@ -146,7 +146,20 @@ class MediaScanner(private val context: Context) {
             MediaStore.MediaColumns.DATE_MODIFIED,
         )
 
-        context.contentResolver.query(collection, projection, null, null, null)?.use { c ->
+        // Files this app restored are excluded from backup. A restore writes
+        // with today's mtime, so a restored photo lands in a fresh year/month
+        // remote path and re-uploads as new — restore, back up, restore again
+        // and the box fills with copies until it runs out of space.
+        val pathColumn = if (Build.VERSION.SDK_INT >= 29) {
+            MediaStore.MediaColumns.RELATIVE_PATH
+        } else {
+            @Suppress("DEPRECATION")
+            MediaStore.MediaColumns.DATA
+        }
+        val selection = "($pathColumn IS NULL OR $pathColumn NOT LIKE ?)"
+        val selectionArgs = arrayOf("%/${no.mwmai.mwmcloud.data.download.Downloader.APP_FOLDER}/%")
+
+        context.contentResolver.query(collection, projection, selection, selectionArgs, null)?.use { c ->
             val idCol = c.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
             val nameCol = c.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME)
             val sizeCol = c.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE)

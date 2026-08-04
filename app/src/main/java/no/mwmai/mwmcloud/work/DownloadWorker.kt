@@ -15,6 +15,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import kotlinx.coroutines.CancellationException
 import no.mwmai.mwmcloud.Graph
 import no.mwmai.mwmcloud.R
 import no.mwmai.mwmcloud.data.download.Downloader
@@ -41,6 +42,9 @@ class DownloadWorker(
 
     override suspend fun doWork(): Result = try {
         download()
+    } catch (e: CancellationException) {
+        // A stopped worker is not a failed restore.
+        throw e
     } catch (e: Throwable) {
         Result.failure(error(applicationContext.getString(R.string.err_generic)))
     }
@@ -79,6 +83,9 @@ class DownloadWorker(
                 // second run of the same folder should read as finished rather
                 // than as "0 of 300".
                 done++
+            } catch (e: CancellationException) {
+                // Not a failed file: the worker was stopped mid-transfer.
+                throw e
             } catch (e: TransportException) {
                 failed++
                 lastError = e

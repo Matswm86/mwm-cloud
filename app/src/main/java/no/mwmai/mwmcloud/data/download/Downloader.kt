@@ -186,6 +186,11 @@ class Downloader(context: Context) {
             n++
             candidate = File(taken.parentFile, "$stem ($n)$suffix")
         }
+        if (candidate.exists()) {
+            // Returning it anyway would overwrite a real file — the one thing
+            // this class promises never to do.
+            throw IOException("No free name for ${taken.name} after $MAX_NAME_ATTEMPTS tries")
+        }
         return candidate
     }
 

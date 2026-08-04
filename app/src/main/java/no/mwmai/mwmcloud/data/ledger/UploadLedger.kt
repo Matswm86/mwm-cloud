@@ -67,18 +67,29 @@ class UploadLedger(context: Context) {
         modified: Long,
         uploadedAt: Long,
     ) = withContext(Dispatchers.IO) {
-        helper.writableDatabase.insertWithOnConflict(
-            TABLE,
-            null,
-            ContentValues().apply {
-                put("dedupe_key", dedupeKey)
-                put("remote_path", remotePath)
-                put("size", size)
-                put("modified", modified)
-                put("uploaded_at", uploadedAt)
-            },
-            SQLiteDatabase.CONFLICT_REPLACE,
-        )
+        val db = helper.writableDatabase
+        db.beginTransaction()
+        try {
+            // One remote path, one row. The key includes size and mtime, so the
+            // same file re-uploaded after an edit got a second row, and the Hjem
+            // count drifted above the number of files actually on the box.
+            db.delete(TABLE, "remote_path = ? AND dedupe_key != ?", arrayOf(remotePath, dedupeKey))
+            db.insertWithOnConflict(
+                TABLE,
+                null,
+                ContentValues().apply {
+                    put("dedupe_key", dedupeKey)
+                    put("remote_path", remotePath)
+                    put("size", size)
+                    put("modified", modified)
+                    put("uploaded_at", uploadedAt)
+                },
+                SQLiteDatabase.CONFLICT_REPLACE,
+            )
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
         Unit
     }
 

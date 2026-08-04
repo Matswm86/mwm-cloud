@@ -15,15 +15,18 @@ import androidx.work.ForegroundInfo
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CancellationException
 import no.mwmai.mwmcloud.settings.BackupSchedule
 import no.mwmai.mwmcloud.Graph
 import no.mwmai.mwmcloud.R
 import no.mwmai.mwmcloud.data.media.CategoryMode
 import no.mwmai.mwmcloud.data.media.LocalFile
 import no.mwmai.mwmcloud.data.media.MediaCategory
+import no.mwmai.mwmcloud.data.media.RemoteNames
 import no.mwmai.mwmcloud.data.media.Selection
 import no.mwmai.mwmcloud.net.Content
 import no.mwmai.mwmcloud.net.TransportException
@@ -49,11 +52,28 @@ class UploadWorker(
      */
     override suspend fun doWork(): Result = try {
         upload()
+    } catch (e: CancellationException) {
+        // A stopped worker is not a failed backup. Swallowing this reported a
+        // run the user cancelled as an error, and broke structured cancellation.
+        throw e
     } catch (e: Throwable) {
         Result.failure(error(applicationContext.getString(R.string.err_generic)))
     }
 
     private suspend fun upload(): Result {
+        // A scheduled run that fires while the user's own backup is going would
+        // upload the same files a second time: both snapshot the ledger before
+        // either finishes. Idempotent on the box, but it doubles bandwidth and
+        // battery. The manual run wins; the periodic one comes back later.
+        val manager = WorkManager.getInstance(applicationContext)
+        val isPeriodic = manager.getWorkInfosForUniqueWork(PERIODIC_WORK_NAME).get()
+            .any { it.id == id }
+        if (isPeriodic) {
+            val manualBusy = manager.getWorkInfosForUniqueWork(WORK_NAME).get()
+                .any { it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED }
+            if (manualBusy) return Result.retry()
+        }
+
         val creds = Graph.credentialStore(applicationContext).current()
             ?: return Result.failure(error("Ingen tilkobling er satt opp."))
 
@@ -100,10 +120,10 @@ class UploadWorker(
             return Result.failure(error(applicationContext.getString(R.string.err_nothing_selected)))
         }
 
-        // Distinct by remote path: a file can be reached both by category and by
-        // a picked folder, and uploading it twice would double the reported work.
-        val pending = found
-            .distinctBy { it.remotePath }
+        // RemoteNames collapses true duplicates (a file reached both by category
+        // and by a picked folder) and renames genuine same-name collisions so no
+        // file is silently skipped. Verify runs the same resolver.
+        val pending = RemoteNames.resolve(found)
             .filter { it.dedupeKey !in alreadyDone }
 
         if (pending.isEmpty()) return Result.success(progress(0, 0))
@@ -136,6 +156,9 @@ class UploadWorker(
                     uploadedAt = System.currentTimeMillis(),
                 )
                 done++
+            } catch (e: CancellationException) {
+                // Not a failed file: the worker was stopped mid-transfer.
+                throw e
             } catch (e: TransportException) {
                 failed++
                 lastError = e

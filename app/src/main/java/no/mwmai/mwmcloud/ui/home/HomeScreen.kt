@@ -360,7 +360,7 @@ private fun VerifyPanel(running: Boolean) {
                                         settings.currentPickedFiles(),
                                     ).filter { it.uri.toString() !in excluded },
                                 )
-                            }.distinctBy { it.remotePath }
+                            }.let { no.mwmai.mwmcloud.data.media.RemoteNames.resolve(it) }
 
                             expected = files.size
                             result = no.mwmai.mwmcloud.data.verify.Verifier(context)

@@ -126,7 +126,38 @@ internal object PropfindParser {
         } else {
             href
         }
-        return java.net.URLDecoder.decode(path, "UTF-8")
+        return percentDecode(path)
+    }
+
+    /**
+     * Plain RFC 3986 percent-decoding, not `URLDecoder`. `URLDecoder` implements
+     * form semantics: it turns `+` into a space, so any file with `+` in its name
+     * round-tripped wrong — uploaded literal, listed as something else, reported
+     * missing forever and re-uploaded by every repair. It also throws on a bare
+     * `%`, which let one oddly named file on the box kill its whole directory
+     * listing. Here `+` stays `+`, and a `%` not followed by two hex digits is
+     * kept literally instead of taking the listing down.
+     */
+    private fun percentDecode(encoded: String): String {
+        val out = java.io.ByteArrayOutputStream(encoded.length)
+        var i = 0
+        while (i < encoded.length) {
+            val c = encoded[i]
+            val hi = if (c == '%' && i + 2 < encoded.length) {
+                Character.digit(encoded[i + 1], 16)
+            } else {
+                -1
+            }
+            val lo = if (hi >= 0) Character.digit(encoded[i + 2], 16) else -1
+            if (hi >= 0 && lo >= 0) {
+                out.write((hi shl 4) or lo)
+                i += 3
+            } else {
+                out.write(c.toString().toByteArray(Charsets.UTF_8))
+                i++
+            }
+        }
+        return out.toByteArray().toString(Charsets.UTF_8)
     }
 
     /** Leading slash, no trailing slash, so collections and files compare alike. */

@@ -108,6 +108,57 @@ class PropfindParserTest {
     }
 
     @Test
+    fun `plus in a filename stays a plus, not a space`() {
+        // URLDecoder implements form semantics and turned + into a space, so a
+        // file uploaded as `a+b.jpg` was listed as `a b.jpg`: reported missing
+        // forever, 404 on open, and re-uploaded by every repair pass.
+        val xml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <D:multistatus xmlns:D="DAV:">
+              <D:response>
+                <D:href>/Bilder/2026/08/a+b.jpg</D:href>
+                <D:propstat>
+                  <D:prop><D:resourcetype/><D:getcontentlength>7</D:getcontentlength></D:prop>
+                  <D:status>HTTP/1.1 200 OK</D:status>
+                </D:propstat>
+              </D:response>
+            </D:multistatus>
+        """.trimIndent()
+
+        val entry = PropfindParser.parse(xml.byteInputStream(), "/Bilder/2026/08").single()
+        assertEquals("/Bilder/2026/08/a+b.jpg", entry.path)
+        assertEquals("a+b.jpg", entry.name)
+    }
+
+    @Test
+    fun `a bare percent in a server-side filename does not kill the listing`() {
+        // URLDecoder threw on a stray %, which took down the whole directory
+        // listing over one oddly named file. It must be kept literally instead.
+        val xml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <D:multistatus xmlns:D="DAV:">
+              <D:response>
+                <D:href>/Bilder/100%.jpg</D:href>
+                <D:propstat>
+                  <D:prop><D:resourcetype/><D:getcontentlength>5</D:getcontentlength></D:prop>
+                  <D:status>HTTP/1.1 200 OK</D:status>
+                </D:propstat>
+              </D:response>
+              <D:response>
+                <D:href>/Bilder/50%25 done.jpg</D:href>
+                <D:propstat>
+                  <D:prop><D:resourcetype/><D:getcontentlength>6</D:getcontentlength></D:prop>
+                  <D:status>HTTP/1.1 200 OK</D:status>
+                </D:propstat>
+              </D:response>
+            </D:multistatus>
+        """.trimIndent()
+
+        val entries = PropfindParser.parse(xml.byteInputStream(), "/Bilder")
+        assertEquals(listOf("/Bilder/100%.jpg", "/Bilder/50% done.jpg"), entries.map { it.path })
+    }
+
+    @Test
     fun `absolute-URL hrefs reduce to a path`() {
         val xml = """
             <?xml version="1.0" encoding="utf-8"?>

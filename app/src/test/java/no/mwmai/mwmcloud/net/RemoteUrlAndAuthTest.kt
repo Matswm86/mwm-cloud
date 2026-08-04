@@ -16,12 +16,12 @@ class RemoteUrlAndAuthTest {
 
     @Test
     fun `basic auth is encoded as UTF-8, not ISO-8859-1`() {
-        val utf8 = WebDavTransport.basicAuth("u644014", "pa§§ord")
+        val utf8 = WebDavTransport.basicAuth("u123456", "pa§§ord")
 
-        assertEquals(Credentials.basic("u644014", "pa§§ord", Charsets.UTF_8), utf8)
+        assertEquals(Credentials.basic("u123456", "pa§§ord", Charsets.UTF_8), utf8)
         // The default overload is ISO-8859-1, and a live Storage Box answers 401
         // to it for this password. If these two ever match, the helper regressed.
-        assertNotEquals(Credentials.basic("u644014", "pa§§ord"), utf8)
+        assertNotEquals(Credentials.basic("u123456", "pa§§ord"), utf8)
     }
 
     @Test
