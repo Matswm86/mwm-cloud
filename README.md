@@ -17,7 +17,7 @@ copies are really there. Household invite codes are not built. See [Roadmap](#ro
 
 ## Download
 
-**[Get the APK](https://github.com/Matswm86/mwm-cloud/releases/download/latest/mwm-cloud-44c971f.apk)**
+**[Get the APK](https://github.com/Matswm86/mwm-cloud/releases/download/latest/mwm-cloud-84b8e02.apk)**
 &nbsp;·&nbsp; [all builds](https://github.com/Matswm86/mwm-cloud/releases)
 
 Open the link on your phone, tap the file, and allow "install from this source" when
