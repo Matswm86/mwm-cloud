@@ -71,11 +71,27 @@ fun HomeScreen(
         .getWorkInfosForUniqueWorkLiveData(UploadWorker.WORK_NAME)
         .observeAsState(emptyList())
 
-    val info = workInfos.firstOrNull()
-    val running = info?.state == WorkInfo.State.RUNNING || info?.state == WorkInfo.State.ENQUEUED
+    // The scheduled backup runs under its own work name. Watching only the
+    // manual one made an automatic run invisible: the screen said "safe" while
+    // files were going up, and the verify button was enabled mid-upload, which
+    // could report freshly uploading files as missing. A periodic job sits
+    // ENQUEUED between runs by design, so only RUNNING counts for it.
+    val periodicInfos by WorkManager.getInstance(context)
+        .getWorkInfosForUniqueWorkLiveData(UploadWorker.PERIODIC_WORK_NAME)
+        .observeAsState(emptyList())
+
+    val manual = workInfos.firstOrNull()
+    val manualActive = manual?.state == WorkInfo.State.RUNNING ||
+        manual?.state == WorkInfo.State.ENQUEUED
+    val periodic = periodicInfos.firstOrNull { it.state == WorkInfo.State.RUNNING }
+
+    val running = manualActive || periodic != null
+    val info = if (manualActive) manual else periodic ?: manual
     val done = info?.progress?.getInt(UploadWorker.KEY_DONE, 0) ?: 0
     val total = info?.progress?.getInt(UploadWorker.KEY_TOTAL, 0) ?: 0
-    val failureMessage = info?.outputData?.getString(UploadWorker.KEY_ERROR)
+    // Failure text only from the manual run: a periodic job never finishes (it
+    // re-enqueues), so it has no outputData worth reading.
+    val failureMessage = manual?.outputData?.getString(UploadWorker.KEY_ERROR)
 
     var backedUp by remember { mutableIntStateOf(0) }
     var refreshKey by remember { mutableIntStateOf(0) }

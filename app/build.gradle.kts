@@ -33,17 +33,39 @@ android {
         buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
     }
 
+    // Real release signing, fed by CI secrets. Nothing is hardcoded: the
+    // keystore path and passwords arrive as environment variables, and a local
+    // build without them still assembles an unsigned release rather than
+    // failing, so `assembleRelease` stays runnable everywhere.
+    val releaseKeystore: String? = System.getenv("MWMCLOUD_KEYSTORE")
+    if (releaseKeystore != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("MWMCLOUD_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("MWMCLOUD_KEY_ALIAS") ?: "mwmcloud"
+                keyPassword = System.getenv("MWMCLOUD_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
             isDebuggable = true
         }
         release {
+            // The published APK. Debuggable would let run-as/JDWP read the box
+            // password out of the running process on a compromised device.
+            isDebuggable = false
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            if (releaseKeystore != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 

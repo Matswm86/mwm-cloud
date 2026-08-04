@@ -16,6 +16,9 @@ concurrency:
 
 env:
   APK_NAME: mwm-cloud
+  # Secrets are unavailable on fork PRs; those builds fall back to debug so the
+  # PR still compiles and tests, while every push to main is release-signed.
+  HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE_BASE64 != '' }}
 
 jobs:
   build:
@@ -36,31 +39,25 @@ jobs:
       - name: Install required SDK packages
         run: sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Restore (or generate) debug keystore
-        env:
-          KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_BASE64 }}
-        run: |
-          set -e
-          mkdir -p ~/.android
-          if [ -n "$KEYSTORE_B64" ]; then
-            echo "Using stable keystore from ANDROID_DEBUG_KEYSTORE_BASE64 secret"
-            echo -n "$KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
-          else
-            echo "Secret not set — generating ephemeral keystore (signature changes per build)"
-            keytool -genkeypair -v \
-              -keystore ~/.android/debug.keystore \
-              -alias androiddebugkey \
-              -storepass android -keypass android \
-              -keyalg RSA -keysize 2048 -validity 10000 \
-              -dname "CN=Android Debug,O=Android,C=US" \
-              -storetype PKCS12
-          fi
-          keytool -list -keystore ~/.android/debug.keystore -storepass android | grep -E "fingerprint|type" | head -3
-
       - name: Run unit tests
         run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
 
-      - name: Build debug APK
+      - name: Restore release keystore
+        if: env.HAS_RELEASE_KEYSTORE == 'true'
+        env:
+          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: echo -n "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+
+      - name: Build signed release APK
+        if: env.HAS_RELEASE_KEYSTORE == 'true'
+        env:
+          MWMCLOUD_KEYSTORE: ${{ runner.temp }}/release.keystore
+          MWMCLOUD_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          MWMCLOUD_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+
+      - name: Build debug APK (fork PRs, no signing secrets)
+        if: env.HAS_RELEASE_KEYSTORE != 'true'
         run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
 
       - name: Stage APK
@@ -68,7 +65,9 @@ jobs:
         # by Android and by browsers, so the commit sha goes in the name.
         run: |
           set -e
-          cp app/build/outputs/apk/debug/app-debug.apk "${APK_NAME}-${GITHUB_SHA:0:7}.apk"
+          apk=app/build/outputs/apk/release/app-release.apk
+          [ -f "$apk" ] || apk=app/build/outputs/apk/debug/app-debug.apk
+          cp "$apk" "${APK_NAME}-${GITHUB_SHA:0:7}.apk"
           ls -la "${APK_NAME}-${GITHUB_SHA:0:7}.apk"
 
       - name: Upload APK as workflow artifact
@@ -88,7 +87,9 @@ jobs:
           prerelease: true
           body: |
             Auto-built APK from the latest `main` commit (${{ github.sha }}).
-            Sideload only — debug-signed, not for store distribution.
+            Release-signed; sideload install. Coming from a debug-signed build
+            (0.1.0 era) requires uninstalling that app once — different app id,
+            different signature.
           files: ${{ env.APK_NAME }}-*.apk
           fail_on_unmatched_files: true
 
@@ -135,6 +136,6 @@ jobs:
         with:
           name: ${{ github.ref_name }}
           body: |
-            MWM Cloud ${{ github.ref_name }}. Sideload, debug-signed.
+            MWM Cloud ${{ github.ref_name }}. Sideload, release-signed.
           files: ${{ env.APK_NAME }}-*.apk
           fail_on_unmatched_files: true

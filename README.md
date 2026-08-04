@@ -123,11 +123,13 @@ cd mwm-cloud
 
 The APK lands in `app/build/outputs/apk/debug/`.
 
-CI builds every push and publishes a signed APK to
-[Releases](https://github.com/Matswm86/mwm-cloud/releases). Set the repository secret
-`ANDROID_DEBUG_KEYSTORE_BASE64` (base64 of a `debug.keystore`) so the signature stays
-stable across builds and updates install over the previous version. Without it, CI
-generates a throwaway key per build and you will have to uninstall before updating.
+CI builds every push and publishes a **release-signed** APK to
+[Releases](https://github.com/Matswm86/mwm-cloud/releases), using the repository
+secrets `RELEASE_KEYSTORE_BASE64`, `RELEASE_KEYSTORE_PASSWORD` and
+`RELEASE_KEY_ALIAS`. The signature is stable, so newer builds install over older
+ones. One-time migration: a phone still running a pre-signing *debug* build has a
+different app id (`.debug` suffix) — uninstall it after the release build is set
+up. Fork PRs have no secrets and fall back to a debug build for CI validation.
 
 ### Pointing a build at your own backend
 

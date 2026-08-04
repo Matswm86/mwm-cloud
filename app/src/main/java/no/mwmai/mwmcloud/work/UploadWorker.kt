@@ -88,7 +88,7 @@ class UploadWorker(
 
         // One pass over the ledger beats one query per file when there are
         // thousands of them.
-        val alreadyDone = ledger.uploadedKeys()
+        var alreadyDone = ledger.uploadedKeys()
 
         // Files the user unticked, and the files they explicitly picked. Which of
         // the two applies is the category's mode, resolved by Selection so the
@@ -123,8 +123,26 @@ class UploadWorker(
         // RemoteNames collapses true duplicates (a file reached both by category
         // and by a picked folder) and renames genuine same-name collisions so no
         // file is silently skipped. Verify runs the same resolver.
-        val pending = RemoteNames.resolve(found)
-            .filter { it.dedupeKey !in alreadyDone }
+        val resolved = RemoteNames.resolve(found)
+
+        // An empty ledger on a phone with files to back up is either a first
+        // run or a reinstall. Asking the box first costs one listing per remote
+        // directory; not asking costs a full re-upload of everything the box
+        // already holds.
+        if (alreadyDone.isEmpty()) {
+            val seeded = try {
+                no.mwmai.mwmcloud.data.ledger.LedgerReseeder.seed(transport, ledger, resolved)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: TransportException) {
+                // The upload loop reports transport failures with a real
+                // message and retry semantics; let it be the one that does.
+                0
+            }
+            if (seeded > 0) alreadyDone = ledger.uploadedKeys()
+        }
+
+        val pending = resolved.filter { it.dedupeKey !in alreadyDone }
 
         if (pending.isEmpty()) return Result.success(progress(0, 0))
 
