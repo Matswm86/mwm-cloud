@@ -1,20 +1,8 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-}
-
-// The backend base URL is never hardcoded in tracked source. Put
-//   mwmcloud.backendUrl=https://your-host.example.com
-// in local.properties (untracked) to point a build at a real deployment.
-val backendUrl: String = run {
-    val props = Properties()
-    val f = rootProject.file("local.properties")
-    if (f.exists()) f.inputStream().use { props.load(it) }
-    props.getProperty("mwmcloud.backendUrl") ?: "https://cloud.example.com"
 }
 
 android {
@@ -25,12 +13,12 @@ android {
         applicationId = "no.mwmai.mwmcloud"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        // CI derives these from git (commit count + short sha) so an installed
+        // APK can say which build it is; a plain local build stays at 1/dev.
+        versionCode = System.getenv("MWMCLOUD_VERSION_CODE")?.toIntOrNull() ?: 1
+        versionName = System.getenv("MWMCLOUD_VERSION_NAME") ?: "0.1.0-dev"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
     }
 
     // Real release signing, fed by CI secrets. Nothing is hardcoded: the
@@ -78,7 +66,6 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
 
     testOptions {

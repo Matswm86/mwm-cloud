@@ -131,16 +131,6 @@ ones. One-time migration: a phone still running a pre-signing *debug* build has 
 different app id (`.debug` suffix) — uninstall it after the release build is set
 up. Fork PRs have no secrets and fall back to a debug build for CI validation.
 
-### Pointing a build at your own backend
-
-The backend URL is never committed. Add to `local.properties` (untracked):
-
-```properties
-mwmcloud.backendUrl=https://your-host.example.com
-```
-
-Builds without it default to `https://cloud.example.com`, which does not resolve.
-
 ## Which storage this works with
 
 Any host that speaks WebDAV works **today**: type its address, username and

@@ -3,10 +3,10 @@
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="file" path="datastore/" />
-        <exclude domain="sharedpref" path="mwmcloud_creds.xml" />
+        <exclude domain="sharedpref" path="mwmcloud_keyset_prefs.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="datastore/" />
-        <exclude domain="sharedpref" path="mwmcloud_creds.xml" />
+        <exclude domain="sharedpref" path="mwmcloud_keyset_prefs.xml" />
     </device-transfer>
 </data-extraction-rules>

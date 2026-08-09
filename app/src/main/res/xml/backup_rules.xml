@@ -6,5 +6,5 @@
 -->
 <full-backup-content>
     <exclude domain="file" path="datastore/" />
-    <exclude domain="sharedpref" path="mwmcloud_creds.xml" />
+    <exclude domain="sharedpref" path="mwmcloud_keyset_prefs.xml" />
 </full-backup-content>

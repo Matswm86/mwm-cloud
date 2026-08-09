@@ -26,6 +26,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Full history: versionCode is the commit count, so the installed app
+          # can identify its build (was pinned at 1 forever before).
+          fetch-depth: 0
+
+      - name: Derive build version from git
+        run: |
+          set -euo pipefail
+          count=$(git rev-list --count HEAD)
+          echo "MWMCLOUD_VERSION_CODE=$count" >> "$GITHUB_ENV"
+          echo "MWMCLOUD_VERSION_NAME=0.1.$count+${GITHUB_SHA::7}" >> "$GITHUB_ENV"
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
