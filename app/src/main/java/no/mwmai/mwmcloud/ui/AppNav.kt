@@ -21,12 +21,14 @@ import no.mwmai.mwmcloud.ui.folders.FoldersScreen
 import no.mwmai.mwmcloud.ui.help.HelpScreen
 import no.mwmai.mwmcloud.ui.home.HomeScreen
 import no.mwmai.mwmcloud.ui.schedule.ScheduleScreen
+import no.mwmai.mwmcloud.ui.setup.QuickSetupScreen
 import no.mwmai.mwmcloud.ui.setup.SetupScreen
 import no.mwmai.mwmcloud.ui.welcome.WelcomeScreen
 
 private object Routes {
     const val WELCOME = "welcome"
     const val SETUP = "setup"
+    const val QUICK_SETUP = "quick_setup"
     const val FOLDERS = "folders"
     const val HOME = "home"
     const val BROWSE = "browse"
@@ -52,7 +54,16 @@ fun AppNav(modifier: Modifier = Modifier) {
 
     NavHost(navController = nav, startDestination = startRoute, modifier = modifier) {
         composable(Routes.WELCOME) {
-            WelcomeScreen(onStart = { nav.navigate(Routes.SETUP) })
+            WelcomeScreen(onStart = { nav.navigate(Routes.QUICK_SETUP) })
+        }
+        composable(Routes.QUICK_SETUP) {
+            QuickSetupScreen(
+                onConnected = {
+                    nav.navigate(Routes.FOLDERS) { popUpTo(Routes.WELCOME) { inclusive = true } }
+                },
+                onManualInstead = { nav.navigate(Routes.SETUP) },
+                onBack = { nav.popBackStack() },
+            )
         }
         composable(Routes.SETUP) {
             SetupScreen(

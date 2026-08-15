@@ -197,4 +197,28 @@
 
     <string name="help_language_title">Language</string>
     <string name="help_language_system">Follow the phone</string>
+    <!-- Quick (automatic) setup via Hetzner API token -->
+    <string name="quick_title">Set up automatically</string>
+    <string name="quick_body">If you have a Hetzner account with a Storage Box, the app does the rest: it creates its own login on your box and connects. Your files stay on your box, seen by nobody else.</string>
+    <string name="quick_step_order">Order a Storage Box at hetzner.com (a few euros a month, cancel any time).</string>
+    <string name="quick_step_token">In Hetzner Console, open Security → API tokens and create a token with Read &amp; Write.</string>
+    <string name="quick_step_paste">Paste the token below. The app uses it once and forgets it.</string>
+    <string name="quick_open_hetzner">Open hetzner.com</string>
+    <string name="quick_token">Hetzner API token</string>
+    <string name="quick_token_note">The token is never saved. Only the login the app creates for itself is kept, sealed on this phone.</string>
+    <string name="quick_which_box">Which Storage Box?</string>
+    <string name="quick_choose_box">You have more than one Storage Box. Pick one and try again.</string>
+    <string name="quick_go">Set up now</string>
+    <string name="quick_manual_instead">Enter address and login myself</string>
+    <string name="quick_step_listing">Looking up your Storage Box…</string>
+    <string name="quick_step_creating">Creating the app\'s own login on your box…</string>
+    <string name="quick_step_waiting_hetzner">Waiting for Hetzner to finish…</string>
+    <string name="quick_step_waiting_webdav">Waiting for the box to answer (this can take a few minutes)…</string>
+    <string name="quick_step_done">Connected.</string>
+    <string name="quick_err_token">Hetzner did not accept that token. Check it is complete and has Read &amp; Write.</string>
+    <string name="quick_err_no_box">This Hetzner account has no Storage Box yet. Order one first, then come back.</string>
+    <string name="quick_err_box_not_ready">Your Storage Box is still being prepared by Hetzner. Try again in a few minutes.</string>
+    <string name="quick_err_timeout">Hetzner is taking longer than usual. Try again in a minute.</string>
+    <string name="quick_err_hetzner">Hetzner said: %1$s</string>
+    <string name="quick_err_webdav_not_up">The login was created but the box is not answering yet. Your details are saved; go to Home and try the connection again in a few minutes.</string>
 </resources>
