@@ -211,7 +211,7 @@
     <string name="quick_go">Set up now</string>
     <string name="quick_manual_instead">Enter address and login myself</string>
     <string name="quick_step_listing">Looking up your Storage Box…</string>
-    <string name="quick_step_creating">Creating the app's own login on your box…</string>
+    <string name="quick_step_creating">Creating the app\'s own login on your box…</string>
     <string name="quick_step_waiting_hetzner">Waiting for Hetzner to finish…</string>
     <string name="quick_step_waiting_webdav">Waiting for the box to answer (this can take a few minutes)…</string>
     <string name="quick_step_done">Connected.</string>
