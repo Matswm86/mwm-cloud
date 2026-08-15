@@ -196,4 +196,28 @@
 
     <string name="help_language_title">Språk</string>
     <string name="help_language_system">Følg telefonen</string>
+    <!-- Hurtigoppsett (automatisk) via Hetzner API-token -->
+    <string name="quick_title">Sett opp automatisk</string>
+    <string name="quick_body">Har du en Hetzner-konto med en Storage Box, gjør appen resten: den lager sin egen innlogging på boksen din og kobler til. Filene dine blir på din boks, uten at noen andre ser dem.</string>
+    <string name="quick_step_order">Bestill en Storage Box på hetzner.com (noen få euro i måneden, si opp når du vil).</string>
+    <string name="quick_step_token">I Hetzner Console: åpne Security → API tokens og lag et token med Read &amp; Write.</string>
+    <string name="quick_step_paste">Lim inn tokenet under. Appen bruker det én gang og glemmer det.</string>
+    <string name="quick_open_hetzner">Åpne hetzner.com</string>
+    <string name="quick_token">Hetzner API-token</string>
+    <string name="quick_token_note">Tokenet lagres aldri. Bare innloggingen appen lager til seg selv beholdes, forseglet på denne telefonen.</string>
+    <string name="quick_which_box">Hvilken Storage Box?</string>
+    <string name="quick_choose_box">Du har mer enn én Storage Box. Velg én og prøv igjen.</string>
+    <string name="quick_go">Sett opp nå</string>
+    <string name="quick_manual_instead">Skriv inn adresse og innlogging selv</string>
+    <string name="quick_step_listing">Finner Storage Boxen din…</string>
+    <string name="quick_step_creating">Lager appens egen innlogging på boksen…</string>
+    <string name="quick_step_waiting_hetzner">Venter på at Hetzner blir ferdig…</string>
+    <string name="quick_step_waiting_webdav">Venter på at boksen svarer (kan ta noen minutter)…</string>
+    <string name="quick_step_done">Tilkoblet.</string>
+    <string name="quick_err_token">Hetzner godtok ikke tokenet. Sjekk at det er komplett og har Read &amp; Write.</string>
+    <string name="quick_err_no_box">Denne Hetzner-kontoen har ingen Storage Box ennå. Bestill en først, og kom tilbake.</string>
+    <string name="quick_err_box_not_ready">Storage Boxen din klargjøres fortsatt hos Hetzner. Prøv igjen om noen minutter.</string>
+    <string name="quick_err_timeout">Hetzner bruker lengre tid enn vanlig. Prøv igjen om et minutt.</string>
+    <string name="quick_err_hetzner">Hetzner sa: %1$s</string>
+    <string name="quick_err_webdav_not_up">Innloggingen ble laget, men boksen svarer ikke ennå. Detaljene er lagret; gå til Hjem og prøv tilkoblingen igjen om noen minutter.</string>
 </resources>

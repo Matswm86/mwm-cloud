@@ -154,6 +154,26 @@ with paperwork attached, and it changes who is responsible when a login breaks.
 
 ## Setting up a Hetzner storage box
 
+### The short way (in the app)
+
+1. Order a Storage Box at hetzner.com. The 1 TB tier is enough for most phones.
+2. In Hetzner Console, open **Security → API tokens** and create a token with
+   **Read & Write**.
+3. In the app, choose **Set up automatically** and paste the token.
+
+The app then creates its own WebDAV-only sub-account on your box (home directory
+`mwmcloud`, its own generated password, reachable externally), waits for Hetzner to
+bring WebDAV up, tests the connection, and stores only that sub-account login,
+sealed under the Android Keystore. The API token is used for that one call and is
+never written anywhere. The box's main login never reaches the phone. A reinstall
+creates a fresh sub-account pointing at the same `mwmcloud` folder, so the ledger
+reseeds from what is already there instead of uploading everything again.
+
+Only Hetzner is automated. Any other WebDAV host still works through the manual
+screen below.
+
+### The manual way (any WebDAV host)
+
 1. Order a Storage Box. The 1 TB tier is enough for most phones.
 2. Enable, in the provider console:
    - **external reachability** — required, or phones cannot connect from outside the provider's network
