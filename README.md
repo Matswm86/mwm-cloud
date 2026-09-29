@@ -6,8 +6,9 @@ tells you honestly whether any of it actually worked.
 
 It is built against [Hetzner Storage Box](https://www.hetzner.com/storage/storage-box/),
 roughly EUR 3.20/month for 1 TB with unlimited traffic, which speaks WebDAV and
-SFTP rather than a proprietary client. Nothing above one `Transport` implementation
-knows that, so any WebDAV host works today by typing its address.
+SFTP rather than a proprietary client. Apart from the optional automatic setup
+(below), nothing above one `Transport` implementation knows that, so any WebDAV host
+works today by typing its address.
 
 **Status: in daily use, and honest about what it is.** Running against a real box
 with about 6 700 files and 50 GB on it. You can connect it, choose exactly what
@@ -113,7 +114,8 @@ everything on it without backing up a single byte first.
 
 ## Build
 
-Requires JDK 17. Everything else comes from the Gradle wrapper.
+Requires JDK 17 and an Android SDK with platform 35 (the build sets `compileSdk = 35`).
+Everything else comes from the Gradle wrapper.
 
 ```bash
 git clone https://github.com/Matswm86/mwm-cloud.git
@@ -123,7 +125,7 @@ cd mwm-cloud
 
 The APK lands in `app/build/outputs/apk/debug/`.
 
-CI builds every push and publishes a **release-signed** APK to
+CI builds every push to `main` and publishes a **release-signed** APK to
 [Releases](https://github.com/Matswm86/mwm-cloud/releases), using the repository
 secrets `RELEASE_KEYSTORE_BASE64`, `RELEASE_KEYSTORE_PASSWORD` and
 `RELEASE_KEY_ALIAS`. The signature is stable, so newer builds install over older
@@ -230,6 +232,7 @@ out of it, so there is a language choice under "Where are my files?".
 - [x] Scheduled automatic backup, with its own list of what it covers
 - [x] Browse and play what is on the server without backing anything up first
 - [x] Put files back on the phone: one file, or a whole month in the background
+- [x] Automatic setup on a Hetzner Storage Box from one API token
 - [ ] First-run walkthrough with a visible confirmation at each step
 - [ ] S3-compatible transport, which also brings multipart upload
 - [ ] A provider picker over the WebDAV and S3 hosts that need no OAuth

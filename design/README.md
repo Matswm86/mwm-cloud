@@ -11,6 +11,9 @@ Screens are 1188 x 2436 px, which is 412 x 892 dp at xxhdpi (@3x).
 | `skjermer/03-velg-mapper.png` | Choose what to back up |
 | `skjermer/06-filer.png` | Browse backed-up files |
 
+`skjermbilder/` holds screenshots of the running build on a real phone, the ones the
+top-level README shows.
+
 `grafikk/` holds the launcher icon (`ikon-app-1024.png`), the adaptive-icon
 foreground layer, the monochrome themed-icon layer, the palette chart, and the
 icon sheet on a 24 dp grid with a 1.8 px stroke.
