@@ -2,31 +2,15 @@
 
 An Android app that backs up a phone's photos, music, video and documents to
 storage you own, lets you watch and read them again from inside the app, and then
-tells you honestly whether any of it actually worked.
+tells you honestly whether any of it actually worked. It is made for people who do
+not want to configure a sync client: the interface is Norwegian first, with large
+buttons and plain words.
 
 It is built against [Hetzner Storage Box](https://www.hetzner.com/storage/storage-box/),
 roughly EUR 3.20/month for 1 TB with unlimited traffic, which speaks WebDAV and
 SFTP rather than a proprietary client. Apart from the optional automatic setup
 (below), nothing above one `Transport` implementation knows that, so any WebDAV host
 works today by typing its address.
-
-**Status: in daily use, and honest about what it is.** Running against a real box
-with about 6 700 files and 50 GB on it. You can connect it, choose exactly what
-goes and what stays, have it run weekly on its own, then browse the result as a
-photo grid, play a film, and ask the server to confirm file by file that your
-copies are really there. Household invite codes are not built. See [Roadmap](#roadmap).
-
-## Download
-
-**[Get the APK](https://github.com/Matswm86/mwm-cloud/releases/download/latest/mwm-cloud-58630f8.apk)**
-&nbsp;·&nbsp; [all builds](https://github.com/Matswm86/mwm-cloud/releases)
-
-Open the link on your phone, tap the file, and allow "install from this source" when
-it asks.
-
-The filename carries the build id on purpose, so your phone can never serve you a
-stale cached APK. If the link 404s, a newer build has landed: grab the newest
-`mwm-cloud-*.apk` from the releases page.
 
 ## What it looks like
 
@@ -38,6 +22,35 @@ Screenshots of the running build on a real phone, backing up a real library.
 
 Every number on these screens was read from the phone or the server. None of them
 are placeholders.
+
+## Download
+
+**[Get the APK](https://github.com/Matswm86/mwm-cloud/releases/download/latest/mwm-cloud-58630f8.apk)**
+&nbsp;·&nbsp; [all builds](https://github.com/Matswm86/mwm-cloud/releases)
+
+Open the link on your phone, tap the file, and allow "install from this source" when
+it asks. Needs Android 8.0 or newer.
+
+The filename carries the build id on purpose, so your phone can never serve you a
+stale cached APK. If the link 404s, a newer build has landed: grab the newest
+`mwm-cloud-*.apk` from the releases page.
+
+## What it does
+
+- Backs up photos, music and video from the phone, plus any documents, files or
+  folders you pick by hand.
+- Lets you choose per category between "everything" and "only what I pick", down to
+  single files in a thumbnail list.
+- Runs on its own daily, weekly or monthly, on wifi and when the battery is not low,
+  or when you tap the start button.
+- Asks the server to confirm, file by file, that your copies are really there, and
+  queues anything that is missing again.
+- Shows what is on the server as a month-grouped photo grid and plays film and music
+  without leaving the app, even on a phone that has not backed up anything yet.
+- Puts one file, or a whole month, back into the phone's own Pictures, Movies, Music
+  or Download folders.
+- Sets up a Hetzner Storage Box from one API token; any other WebDAV host works by
+  typing its address, username and password.
 
 ## Why this exists
 
@@ -84,6 +97,14 @@ Five consequences shape every decision here:
 
 ## How it works
 
+MWM Cloud is a Kotlin app with a Jetpack Compose interface. It reads the phone's
+media library and the system file picker, records every upload in a local SQLite
+ledger, and sends files over WebDAV with OkHttp from WorkManager jobs, so a backup
+resumes across runs. Credentials are sealed with Tink under a key held in the
+Android Keystore. A verifier lists the server and compares file sizes against the
+ledger, and the in-app browser reads from the same server with Coil for photos and
+Media3 ExoPlayer for film and music.
+
 ```
   On the phone                                          Your storage
   ----------------------------------------              ------------
@@ -112,26 +133,13 @@ month is one request. Files you pick by hand keep the folder shape you chose, un
 server directly, so a fresh install pointed at an existing box can browse and play
 everything on it without backing up a single byte first.
 
-## Build
+## Status
 
-Requires JDK 17 and an Android SDK with platform 35 (the build sets `compileSdk = 35`).
-Everything else comes from the Gradle wrapper.
-
-```bash
-git clone https://github.com/Matswm86/mwm-cloud.git
-cd mwm-cloud
-./gradlew :app:assembleDebug
-```
-
-The APK lands in `app/build/outputs/apk/debug/`.
-
-CI builds every push to `main` and publishes a **release-signed** APK to
-[Releases](https://github.com/Matswm86/mwm-cloud/releases), using the repository
-secrets `RELEASE_KEYSTORE_BASE64`, `RELEASE_KEYSTORE_PASSWORD` and
-`RELEASE_KEY_ALIAS`. The signature is stable, so newer builds install over older
-ones. One-time migration: a phone still running a pre-signing *debug* build has a
-different app id (`.debug` suffix) — uninstall it after the release build is set
-up. Fork PRs have no secrets and fall back to a debug build for CI validation.
+In daily use, and honest about what it is. It runs against a real box with about
+6 700 files and 50 GB on it. Version 0.1.x, where the last number is the build's
+commit count. Not built yet: household invite codes, a first-run walkthrough, and
+S3-compatible or SFTP transports; single files above 5 GB are skipped and
+reported. See [Roadmap](#roadmap).
 
 ## Which storage this works with
 
@@ -178,9 +186,9 @@ screen below.
 
 1. Order a Storage Box. The 1 TB tier is enough for most phones.
 2. Enable, in the provider console:
-   - **external reachability** — required, or phones cannot connect from outside the provider's network
-   - **WebDAV** — the app's transport
-   - **SSH** — optional, for your own `rsync`/`rclone` access
+   - **external reachability**: required, or phones cannot connect from outside the provider's network
+   - **WebDAV**: the app's transport
+   - **SSH**: optional, for your own `rsync`/`rclone` access
    - leave **Samba** off
 3. Turn on automatic snapshots. They are the second line of defence if a client ever
    deletes something it should not have.
@@ -243,6 +251,27 @@ Current limits worth knowing: single files above 5 GB are skipped and reported,
 because WebDAV `PUT` cannot resume a broken upload. The box serves no thumbnail
 API, so the photo grid downloads full images and downsamples them on the device;
 Coil's disk cache keeps that to one fetch per photo per install.
+
+## Build
+
+Requires JDK 17 and an Android SDK with platform 35 (the build sets `compileSdk = 35`).
+Everything else comes from the Gradle wrapper.
+
+```bash
+git clone https://github.com/Matswm86/mwm-cloud.git
+cd mwm-cloud
+./gradlew :app:assembleDebug
+```
+
+The APK lands in `app/build/outputs/apk/debug/`.
+
+CI builds every push to `main` and publishes a **release-signed** APK to
+[Releases](https://github.com/Matswm86/mwm-cloud/releases), using the repository
+secrets `RELEASE_KEYSTORE_BASE64`, `RELEASE_KEYSTORE_PASSWORD` and
+`RELEASE_KEY_ALIAS`. The signature is stable, so newer builds install over older
+ones. One-time migration: a phone still running a pre-signing *debug* build has a
+different app id (`.debug` suffix), so uninstall it after the release build is set
+up. Fork PRs have no secrets and fall back to a debug build for CI validation.
 
 ## Licence
 
